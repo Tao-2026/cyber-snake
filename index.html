@@ -25,9 +25,9 @@
     <section class="game-layout" aria-label="Cyber Snake 游戏">
       <aside class="panel stats-panel" aria-label="游戏数据">
         <div class="panel-label">RUN DATA</div>
-        <div class="stat"><span>SCORE</span><strong id="score">0000</strong></div>
-        <div class="stat"><span>HIGH SCORE</span><strong id="highScore">0000</strong></div>
-        <div class="stat"><span>SPEED</span><strong id="speed">01</strong></div>
+        <div class="stat"><span id="coresLabel">TOTAL CORES</span><strong id="cores">000</strong></div>
+        <div class="stat"><span id="highScoreLabel">BEST SCORE</span><strong id="highScore">0000</strong></div>
+        <div class="stat"><span id="speedLabel">SPEED</span><strong id="speed">01</strong></div>
         <div class="divider"></div>
         <div class="leaderboard" aria-label="Top 3 排行榜">
           <div class="leaderboard-heading"><p class="leaderboard-title">TOP 3 // HALL OF FAME</p><button id="clearScoresBtn" type="button">清空</button></div>
@@ -47,6 +47,7 @@
         <div class="canvas-frame" id="canvasFrame">
           <canvas id="gameCanvas" width="600" height="600" tabindex="0" aria-label="贪吃蛇游戏区域。按开始游戏，然后使用方向键或 WASD 控制。"></canvas>
           <div class="scanlines" aria-hidden="true"></div>
+          <div id="scoreBurst" class="score-burst" aria-hidden="true"></div>
           <div id="gameOverlay" class="overlay">
             <p id="overlayKicker" class="overlay-kicker">NEURAL LINK READY</p>
             <h2 id="overlayTitle">CYBER SNAKE</h2>

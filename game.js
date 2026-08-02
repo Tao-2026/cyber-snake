@@ -3,17 +3,20 @@
 const GRID = 24;
 const BASE_DELAY = 145;
 const MIN_DELAY = 62;
-const SCORE_STEP = 10;
-const STORAGE_KEY = "cyberSnake.highScore";
+const STORAGE_KEY = "cyberSnake.competitiveHighScore.v2";
 const LANGUAGE_KEY = "cyberSnake.language";
-const LEADERBOARD_KEY = "cyberSnake.leaderboard";
+const LEADERBOARD_KEY = "cyberSnake.emojiPodium.v2";
 const EMOJI_POOL = ["🤖","👾","👽","🦾","🥷","🧙","🦹","🦸","🐲","🦊","🐼","🐸","🐵","🦄","🦖","🐙","🦈","🔥","⚡","💀","😎","🤩","🥳","😈"];
 
 const canvas = document.querySelector("#gameCanvas");
 const ctx = canvas.getContext("2d");
-const scoreEl = document.querySelector("#score");
+const coresEl = document.querySelector("#cores");
 const highScoreEl = document.querySelector("#highScore");
 const speedEl = document.querySelector("#speed");
+const coresLabel = document.querySelector("#coresLabel");
+const highScoreLabel = document.querySelector("#highScoreLabel");
+const speedLabel = document.querySelector("#speedLabel");
+const scoreBurst = document.querySelector("#scoreBurst");
 const stateEl = document.querySelector("#systemState");
 const liveStatus = document.querySelector("#liveStatus");
 const overlay = document.querySelector("#gameOverlay");
@@ -40,19 +43,19 @@ const clearScoresBtn = document.querySelector("#clearScoresBtn");
 const copy = {
   zh: {
     switchLabel:"Switch to English", toggle:"EN", readyKicker:"NEURAL LINK READY", readyTitle:"CYBER SNAKE", readyText:"接入霓虹网络，收集数据核心。", start:"开始游戏",
-    statsHint:"吞噬数据核心以增长。速度会随分数提升。", moveHint:"或 WASD 移动", pauseHint:"暂停 / 继续", pause:"暂停", resume:"继续", restart:"重新开始",
+    statsHint:"吞噬数据核心以增长。速度会随总豆数提升。", moveHint:"或 WASD 移动", pauseHint:"暂停 / 继续", pause:"暂停", resume:"继续", restart:"重新开始",
     canvasLabel:"贪吃蛇游戏区域。按开始游戏，然后使用方向键或 WASD 控制。", gameLabel:"Cyber Snake 游戏", statsLabel:"游戏数据", controlsLabel:"操作说明", touchLabel:"触屏方向控制", directions:["向上","向左","向下","向右"],
     running:"RUNNING", paused:"PAUSED", terminated:"RUN TERMINATED", startAnnounce:"游戏开始", pausedAnnounce:"游戏已暂停", resumeAnnounce:"游戏继续", readyAnnounce:"游戏待开始",
-    scoreAnnounce:value=>`获得 ${SCORE_STEP} 分，当前 ${value} 分`, pauseTitle:"已暂停", pauseText:"按空格或点击继续返回网络。", resumeGame:"继续游戏", overTitle:"游戏结束", retry:"重新挑战",
-    overText:(value,best)=>`最终得分 ${value}。最高分 ${best}。`, overAnnounce:value=>`游戏结束，最终得分 ${value}`, leaderboardLabel:"Top 3 Emoji 领奖台", qualifiedTitle:"破榜成功", qualifiedText:value=>`${value} 分进入 TOP 3，召唤你的领奖台角色。`, emojiLabel:"随机选择你的领奖台角色", emojiHint:"不满意可以继续随机", randomEmoji:"🎲 随机 Emoji", save:"确认登台", skip:"跳过 / 重试", savedTitle:"登台成功", savedText:emoji=>`${emoji} 已登上荣誉领奖台。`, clear:"清空", clearConfirm:"确定清空 TOP 3 领奖台吗？", rankLabel:(rank,emoji,value)=>`第 ${rank} 名，${emoji}，${value} 分`, emptyRank:rank=>`第 ${rank} 名空缺`
+    coresLabel:"总豆数", highScoreLabel:"最高竞技分", speedLabel:"速度", scoreAnnounce:(earned,value,multiplier)=>`获得 ${earned} 分，倍率 ${multiplier}，当前竞技分 ${value}`, scoreBurst:(earned,multiplier)=>`+${earned} · ×${multiplier}`, pauseTitle:"已暂停", pauseText:"按空格或点击继续返回网络。", resumeGame:"继续游戏", overTitle:"游戏结束", retry:"重新挑战",
+    overText:(value,best,cores)=>`吞噬 ${cores} 颗豆。最终竞技分 ${value}，最高 ${best}。`, overAnnounce:(value,cores)=>`游戏结束，共 ${cores} 颗豆，最终竞技分 ${value}`, leaderboardLabel:"Top 3 Emoji 领奖台", qualifiedTitle:"破榜成功", qualifiedText:(value,cores)=>`${cores} 颗豆转化为 ${value} 分，进入 TOP 3。`, emojiLabel:"随机选择你的领奖台角色", emojiHint:"不满意可以继续随机", randomEmoji:"🎲 随机 Emoji", save:"确认登台", skip:"跳过 / 重试", savedTitle:"登台成功", savedText:emoji=>`${emoji} 已登上荣誉领奖台。`, clear:"清空", clearConfirm:"确定清空 TOP 3 领奖台吗？", rankLabel:(rank,emoji,value)=>`第 ${rank} 名，${emoji}，${value} 分`, emptyRank:rank=>`第 ${rank} 名空缺`
   },
   en: {
     switchLabel:"切换到中文", toggle:"中", readyKicker:"NEURAL LINK READY", readyTitle:"CYBER SNAKE", readyText:"Enter the neon grid and collect data cores.", start:"Start game",
-    statsHint:"Consume data cores to grow. Speed increases with your score.", moveHint:"or WASD to move", pauseHint:"Pause / resume", pause:"Pause", resume:"Resume", restart:"Restart",
+    statsHint:"Consume data cores to grow. Speed increases with total cores.", moveHint:"or WASD to move", pauseHint:"Pause / resume", pause:"Pause", resume:"Resume", restart:"Restart",
     canvasLabel:"Snake game area. Start the game, then use arrow keys or WASD to steer.", gameLabel:"Cyber Snake game", statsLabel:"Game statistics", controlsLabel:"Instructions", touchLabel:"Touch direction controls", directions:["Up","Left","Down","Right"],
     running:"RUNNING", paused:"PAUSED", terminated:"RUN TERMINATED", startAnnounce:"Game started", pausedAnnounce:"Game paused", resumeAnnounce:"Game resumed", readyAnnounce:"Game ready",
-    scoreAnnounce:value=>`Scored ${SCORE_STEP} points. Total ${value}.`, pauseTitle:"PAUSED", pauseText:"Press Space or Resume to return to the grid.", resumeGame:"Resume game", overTitle:"GAME OVER", retry:"Try again",
-    overText:(value,best)=>`Final score ${value}. High score ${best}.`, overAnnounce:value=>`Game over. Final score ${value}.`, leaderboardLabel:"Top 3 emoji podium", qualifiedTitle:"NEW HIGH SCORE", qualifiedText:value=>`${value} points made the TOP 3. Summon your podium character.`, emojiLabel:"Randomize your podium character", emojiHint:"Keep rolling until you find your champion", randomEmoji:"🎲 Random Emoji", save:"Claim podium", skip:"Skip / retry", savedTitle:"PODIUM CLAIMED", savedText:emoji=>`${emoji} entered the Hall of Fame.`, clear:"Clear", clearConfirm:"Clear the TOP 3 podium?", rankLabel:(rank,emoji,value)=>`Rank ${rank}, ${emoji}, ${value} points`, emptyRank:rank=>`Rank ${rank} empty`
+    coresLabel:"TOTAL CORES", highScoreLabel:"BEST SCORE", speedLabel:"SPEED", scoreAnnounce:(earned,value,multiplier)=>`Scored ${earned} at ×${multiplier}. Competitive score ${value}.`, scoreBurst:(earned,multiplier)=>`+${earned} · ×${multiplier}`, pauseTitle:"PAUSED", pauseText:"Press Space or Resume to return to the grid.", resumeGame:"Resume game", overTitle:"GAME OVER", retry:"Try again",
+    overText:(value,best,cores)=>`${cores} ${cores===1?"core":"cores"} consumed. Final score ${value}; best ${best}.`, overAnnounce:(value,cores)=>`Game over. ${cores} ${cores===1?"core":"cores"} and ${value} competitive points.`, leaderboardLabel:"Top 3 emoji podium", qualifiedTitle:"NEW HIGH SCORE", qualifiedText:(value,cores)=>`${cores} ${cores===1?"core":"cores"} converted into ${value} points and a TOP 3 finish.`, emojiLabel:"Randomize your podium character", emojiHint:"Keep rolling until you find your champion", randomEmoji:"🎲 Random Emoji", save:"Claim podium", skip:"Skip / retry", savedTitle:"PODIUM CLAIMED", savedText:emoji=>`${emoji} entered the Hall of Fame.`, clear:"Clear", clearConfirm:"Clear the TOP 3 podium?", rankLabel:(rank,emoji,value)=>`Rank ${rank}, ${emoji}, ${value} points`, emptyRank:rank=>`Rank ${rank} empty`
   }
 };
 
@@ -61,6 +64,7 @@ let food = { x: 17, y: 12 };
 let direction = { x: 1, y: 0 };
 let queuedDirection = { x: 1, y: 0 };
 let score = 0;
+let cores = 0;
 let highScore = loadHighScore();
 let status = "ready";
 let timer = null;
@@ -69,6 +73,8 @@ let language = loadLanguage();
 let scores = loadLeaderboard();
 let awaitingEmoji = false;
 let selectedEmoji = null;
+let lastFoodAt = 0;
+let pausedAt = 0;
 
 function loadLanguage() {
   try { return localStorage.getItem(LANGUAGE_KEY) === "en" ? "en" : "zh"; }
@@ -98,6 +104,7 @@ function applyLanguage() {
   languageToggle.setAttribute("aria-label", text("switchLabel"));
   statsHint.textContent = text("statsHint"); moveHint.textContent = text("moveHint"); pauseHint.textContent = text("pauseHint");
   pauseBtn.textContent = status === "paused" ? text("resume") : text("pause"); restartBtn.textContent = text("restart");
+  coresLabel.textContent = text("coresLabel"); highScoreLabel.textContent = text("highScoreLabel"); speedLabel.textContent = text("speedLabel");
   canvas.setAttribute("aria-label", text("canvasLabel"));
   document.querySelector(".game-layout").setAttribute("aria-label", text("gameLabel"));
   document.querySelector(".stats-panel").setAttribute("aria-label", text("statsLabel"));
@@ -109,8 +116,8 @@ function applyLanguage() {
   document.querySelectorAll("[data-direction]").forEach((button, index) => button.setAttribute("aria-label", text("directions")[index]));
   if (status === "ready") { showOverlay(text("readyKicker"), text("readyTitle"), text("readyText"), text("start"), false); announce(text("readyAnnounce")); }
   else if (status === "paused") showOverlay("CONNECTION SUSPENDED", text("pauseTitle"), text("pauseText"), text("resumeGame"), false);
-  else if (status === "over" && awaitingEmoji) showOverlay("HALL OF FAME", text("qualifiedTitle"), text("qualifiedText", score), text("skip"), false);
-  else if (status === "over") showOverlay("SIGNAL LOST", text("overTitle"), text("overText", score, highScore), text("retry"), false);
+  else if (status === "over" && awaitingEmoji) showOverlay("HALL OF FAME", text("qualifiedTitle"), text("qualifiedText", score, cores), text("skip"), false);
+  else if (status === "over") showOverlay("SIGNAL LOST", text("overTitle"), text("overText", score, highScore, cores), text("retry"), false);
   renderLeaderboard();
 }
 
@@ -124,7 +131,7 @@ function saveHighScore() {
 }
 
 function formatScore(value) { return String(value).padStart(4, "0"); }
-function level() { return Math.min(12, Math.floor(score / 40) + 1); }
+function level() { return Math.min(12, Math.floor(cores / 3) + 1); }
 function delay() { return Math.max(MIN_DELAY, BASE_DELAY - (level() - 1) * 8); }
 
 function resetModel() {
@@ -132,6 +139,8 @@ function resetModel() {
   direction = { x: 1, y: 0 };
   queuedDirection = { ...direction };
   score = 0;
+  cores = 0;
+  lastFoodAt = performance.now();
   food = { x: 12, y: 12 };
   updateHud();
   draw();
@@ -169,10 +178,17 @@ function tick() {
   }
   snake.unshift(head);
   if (ate) {
-    score += SCORE_STEP;
+    cores += 1;
+    const now = performance.now();
+    const interval = now - lastFoodAt;
+    const multiplier = interval <= 2000 ? 3 : interval <= 4000 ? 2 : interval <= 6000 ? 1.5 : 1;
+    const earned = Math.round(snake.length * 10 * multiplier);
+    score += earned;
+    lastFoodAt = now;
     if (score > highScore) { highScore = score; saveHighScore(); }
     placeFood();
-    announce(text("scoreAnnounce", score));
+    announce(text("scoreAnnounce", earned, score, multiplier));
+    showScoreBurst(earned, multiplier);
   } else snake.pop();
   updateHud();
   draw();
@@ -196,6 +212,7 @@ function setDirection(next) {
 function togglePause() {
   if (status === "running") {
     status = "paused";
+    pausedAt = performance.now();
     clearTimer();
     pauseBtn.textContent = text("resume");
     showOverlay("CONNECTION SUSPENDED", text("pauseTitle"), text("pauseText"), text("resumeGame"));
@@ -203,6 +220,8 @@ function togglePause() {
     announce(text("pausedAnnounce"));
   } else if (status === "paused") {
     status = "running";
+    if (pausedAt) lastFoodAt += performance.now() - pausedAt;
+    pausedAt = 0;
     overlay.classList.add("hidden");
     pauseBtn.textContent = text("pause");
     updateState("RUNNING");
@@ -218,15 +237,15 @@ function endGame() {
   pauseBtn.disabled = true;
   awaitingEmoji = qualifiesForLeaderboard(score);
   if (awaitingEmoji) {
-    showOverlay("HALL OF FAME", text("qualifiedTitle"), text("qualifiedText", score), text("skip"), false);
+    showOverlay("HALL OF FAME", text("qualifiedTitle"), text("qualifiedText", score, cores), text("skip"), false);
     selectedEmoji = null;
     candidateEmoji.textContent = "❔";
     saveScoreBtn.disabled = true;
     emojiForm.classList.remove("hidden");
     randomEmojiBtn.focus({ preventScroll:true });
-  } else showOverlay("SIGNAL LOST", text("overTitle"), text("overText", score, highScore), text("retry"));
+  } else showOverlay("SIGNAL LOST", text("overTitle"), text("overText", score, highScore, cores), text("retry"));
   updateState(text("terminated"));
-  announce(text("overAnnounce", score));
+  announce(text("overAnnounce", score, cores));
 }
 
 function qualifiesForLeaderboard(value) {
@@ -282,9 +301,15 @@ function showOverlay(kicker, title, body, button, focus = true) {
 }
 
 function clearTimer() { if (timer !== null) { clearTimeout(timer); timer = null; } }
+function showScoreBurst(earned, multiplier) {
+  scoreBurst.textContent = text("scoreBurst", earned, multiplier);
+  scoreBurst.classList.remove("show");
+  void scoreBurst.offsetWidth;
+  scoreBurst.classList.add("show");
+}
 function announce(message) { liveStatus.textContent = message; }
 function updateState(value) { stateEl.textContent = value; }
-function updateHud() { scoreEl.textContent = formatScore(score); highScoreEl.textContent = formatScore(highScore); speedEl.textContent = String(level()).padStart(2, "0"); }
+function updateHud() { coresEl.textContent = String(cores).padStart(3, "0"); highScoreEl.textContent = formatScore(highScore); speedEl.textContent = String(level()).padStart(2, "0"); }
 
 function draw() {
   const cell = canvas.width / GRID;
@@ -323,7 +348,6 @@ restartBtn.addEventListener("click", startGame);
 emojiForm.addEventListener("submit", event => { event.preventDefault(); recordScore(); });
 randomEmojiBtn.addEventListener("click", rollEmoji);
 clearScoresBtn.addEventListener("click", () => {
-  if (!window.confirm(text("clearConfirm"))) return;
   scores = [];
   saveLeaderboard();
   renderLeaderboard();
