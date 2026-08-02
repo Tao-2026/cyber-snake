@@ -31,7 +31,11 @@
         <div class="divider"></div>
         <div class="leaderboard" aria-label="Top 3 排行榜">
           <div class="leaderboard-heading"><p class="leaderboard-title">TOP 3 // HALL OF FAME</p><button id="clearScoresBtn" type="button">清空</button></div>
-          <ol id="leaderboardList"></ol>
+          <div id="podium" class="podium" aria-live="polite">
+            <article class="podium-place place-2" data-rank="2"><span class="podium-emoji" aria-hidden="true">❔</span><div class="podium-block"><b>#2</b><strong>----</strong></div></article>
+            <article class="podium-place place-1" data-rank="1"><span class="podium-emoji" aria-hidden="true">❔</span><div class="podium-block"><b>#1</b><strong>----</strong></div></article>
+            <article class="podium-place place-3" data-rank="3"><span class="podium-emoji" aria-hidden="true">❔</span><div class="podium-block"><b>#3</b><strong>----</strong></div></article>
+          </div>
         </div>
         <div class="divider"></div>
         <p id="statsHint" class="microcopy">吞噬数据核心以增长。速度会随分数提升。</p>
@@ -47,10 +51,11 @@
             <p id="overlayKicker" class="overlay-kicker">NEURAL LINK READY</p>
             <h2 id="overlayTitle">CYBER SNAKE</h2>
             <p id="overlayText">接入霓虹网络，收集数据核心。</p>
-            <form id="nameForm" class="name-form hidden" autocomplete="off">
-              <label id="nameLabel" for="playerName">输入 3 字符留名</label>
-              <div><input id="playerName" name="playerName" maxlength="3" required spellcheck="false" aria-describedby="nameHint"><button id="saveScoreBtn" type="submit">记录</button></div>
-              <small id="nameHint">字母、数字或中文</small>
+            <form id="emojiForm" class="emoji-form hidden">
+              <p id="emojiLabel">随机选择你的领奖台角色</p>
+              <div class="emoji-preview" aria-live="polite"><span id="candidateEmoji">❔</span></div>
+              <div class="emoji-actions"><button id="randomEmojiBtn" type="button">🎲 随机 Emoji</button><button id="saveScoreBtn" type="submit" disabled>确认登台</button></div>
+              <small id="emojiHint">不满意可以继续随机</small>
             </form>
             <button id="primaryBtn" class="btn btn-primary" type="button">开始游戏</button>
           </div>
