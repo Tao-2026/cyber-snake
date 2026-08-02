@@ -17,6 +17,10 @@ const coresLabel = document.querySelector("#coresLabel");
 const highScoreLabel = document.querySelector("#highScoreLabel");
 const speedLabel = document.querySelector("#speedLabel");
 const scoreBurst = document.querySelector("#scoreBurst");
+const scoreFxLayer = document.querySelector("#scoreFxLayer");
+const burstPoints = document.querySelector("#burstPoints");
+const burstTier = document.querySelector("#burstTier");
+const canvasFrame = document.querySelector("#canvasFrame");
 const stateEl = document.querySelector("#systemState");
 const liveStatus = document.querySelector("#liveStatus");
 const overlay = document.querySelector("#gameOverlay");
@@ -46,7 +50,7 @@ const copy = {
     statsHint:"吞噬数据核心以增长。速度会随总豆数提升。", moveHint:"或 WASD 移动", pauseHint:"暂停 / 继续", pause:"暂停", resume:"继续", restart:"重新开始",
     canvasLabel:"贪吃蛇游戏区域。按开始游戏，然后使用方向键或 WASD 控制。", gameLabel:"Cyber Snake 游戏", statsLabel:"游戏数据", controlsLabel:"操作说明", touchLabel:"触屏方向控制", directions:["向上","向左","向下","向右"],
     running:"RUNNING", paused:"PAUSED", terminated:"RUN TERMINATED", startAnnounce:"游戏开始", pausedAnnounce:"游戏已暂停", resumeAnnounce:"游戏继续", readyAnnounce:"游戏待开始",
-    coresLabel:"总豆数", highScoreLabel:"最高竞技分", speedLabel:"速度", scoreAnnounce:(earned,value,multiplier)=>`获得 ${earned} 分，倍率 ${multiplier}，当前竞技分 ${value}`, scoreBurst:(earned,multiplier)=>`+${earned} · ×${multiplier}`, pauseTitle:"已暂停", pauseText:"按空格或点击继续返回网络。", resumeGame:"继续游戏", overTitle:"游戏结束", retry:"重新挑战",
+    coresLabel:"总豆数", highScoreLabel:"最高竞技分", speedLabel:"速度", scoreAnnounce:(earned,value,multiplier)=>`获得 ${earned} 分，倍率 ${multiplier}，当前竞技分 ${value}`, tierNormal:"核心吸收", tierFast:"快速连击 ×2", tierUltra:"极速爆分 ×3", pauseTitle:"已暂停", pauseText:"按空格或点击继续返回网络。", resumeGame:"继续游戏", overTitle:"游戏结束", retry:"重新挑战",
     overText:(value,best,cores)=>`吞噬 ${cores} 颗豆。最终竞技分 ${value}，最高 ${best}。`, overAnnounce:(value,cores)=>`游戏结束，共 ${cores} 颗豆，最终竞技分 ${value}`, leaderboardLabel:"Top 3 Emoji 领奖台", qualifiedTitle:"破榜成功", qualifiedText:(value,cores)=>`${cores} 颗豆转化为 ${value} 分，进入 TOP 3。`, emojiLabel:"随机选择你的领奖台角色", emojiHint:"不满意可以继续随机", randomEmoji:"🎲 随机 Emoji", save:"确认登台", skip:"跳过 / 重试", savedTitle:"登台成功", savedText:emoji=>`${emoji} 已登上荣誉领奖台。`, clear:"清空", clearConfirm:"确定清空 TOP 3 领奖台吗？", rankLabel:(rank,emoji,value)=>`第 ${rank} 名，${emoji}，${value} 分`, emptyRank:rank=>`第 ${rank} 名空缺`
   },
   en: {
@@ -54,7 +58,7 @@ const copy = {
     statsHint:"Consume data cores to grow. Speed increases with total cores.", moveHint:"or WASD to move", pauseHint:"Pause / resume", pause:"Pause", resume:"Resume", restart:"Restart",
     canvasLabel:"Snake game area. Start the game, then use arrow keys or WASD to steer.", gameLabel:"Cyber Snake game", statsLabel:"Game statistics", controlsLabel:"Instructions", touchLabel:"Touch direction controls", directions:["Up","Left","Down","Right"],
     running:"RUNNING", paused:"PAUSED", terminated:"RUN TERMINATED", startAnnounce:"Game started", pausedAnnounce:"Game paused", resumeAnnounce:"Game resumed", readyAnnounce:"Game ready",
-    coresLabel:"TOTAL CORES", highScoreLabel:"BEST SCORE", speedLabel:"SPEED", scoreAnnounce:(earned,value,multiplier)=>`Scored ${earned} at ×${multiplier}. Competitive score ${value}.`, scoreBurst:(earned,multiplier)=>`+${earned} · ×${multiplier}`, pauseTitle:"PAUSED", pauseText:"Press Space or Resume to return to the grid.", resumeGame:"Resume game", overTitle:"GAME OVER", retry:"Try again",
+    coresLabel:"TOTAL CORES", highScoreLabel:"BEST SCORE", speedLabel:"SPEED", scoreAnnounce:(earned,value,multiplier)=>`Scored ${earned} at ×${multiplier}. Competitive score ${value}.`, tierNormal:"CORE ABSORBED", tierFast:"FAST COMBO ×2", tierUltra:"ULTRA SCORE ×3", pauseTitle:"PAUSED", pauseText:"Press Space or Resume to return to the grid.", resumeGame:"Resume game", overTitle:"GAME OVER", retry:"Try again",
     overText:(value,best,cores)=>`${cores} ${cores===1?"core":"cores"} consumed. Final score ${value}; best ${best}.`, overAnnounce:(value,cores)=>`Game over. ${cores} ${cores===1?"core":"cores"} and ${value} competitive points.`, leaderboardLabel:"Top 3 emoji podium", qualifiedTitle:"NEW HIGH SCORE", qualifiedText:(value,cores)=>`${cores} ${cores===1?"core":"cores"} converted into ${value} points and a TOP 3 finish.`, emojiLabel:"Randomize your podium character", emojiHint:"Keep rolling until you find your champion", randomEmoji:"🎲 Random Emoji", save:"Claim podium", skip:"Skip / retry", savedTitle:"PODIUM CLAIMED", savedText:emoji=>`${emoji} entered the Hall of Fame.`, clear:"Clear", clearConfirm:"Clear the TOP 3 podium?", rankLabel:(rank,emoji,value)=>`Rank ${rank}, ${emoji}, ${value} points`, emptyRank:rank=>`Rank ${rank} empty`
   }
 };
@@ -188,7 +192,7 @@ function tick() {
     if (score > highScore) { highScore = score; saveHighScore(); }
     placeFood();
     announce(text("scoreAnnounce", earned, score, multiplier));
-    showScoreBurst(earned, multiplier);
+    showScoreBurst(earned, multiplier, head);
   } else snake.pop();
   updateHud();
   draw();
@@ -264,7 +268,7 @@ function renderLeaderboard() {
     place.classList.remove("entering");
     if (entry) requestAnimationFrame(() => place.classList.add("entering"));
   });
-  clearScoresBtn.disabled = scores.length === 0;
+  clearScoresBtn.disabled = scores.length === 0 && highScore === 0;
 }
 
 function recordScore() {
@@ -301,11 +305,29 @@ function showOverlay(kicker, title, body, button, focus = true) {
 }
 
 function clearTimer() { if (timer !== null) { clearTimeout(timer); timer = null; } }
-function showScoreBurst(earned, multiplier) {
-  scoreBurst.textContent = text("scoreBurst", earned, multiplier);
-  scoreBurst.classList.remove("show");
+function showScoreBurst(earned, multiplier, position) {
+  const tier = multiplier >= 3 || earned >= 400 ? "ultra" : multiplier >= 2 || earned >= 250 ? "fast" : "normal";
+  burstPoints.textContent = `+${earned}`;
+  burstTier.textContent = text(tier === "ultra" ? "tierUltra" : tier === "fast" ? "tierFast" : "tierNormal");
+  scoreFxLayer.style.setProperty("--fx-x", `${((position.x + .5) / GRID) * 100}%`);
+  scoreFxLayer.style.setProperty("--fx-y", `${((position.y + .5) / GRID) * 100}%`);
+  scoreFxLayer.querySelectorAll(".fx-particle").forEach(particle => particle.remove());
+  if (tier !== "normal") {
+    const count = tier === "ultra" ? 14 : 8;
+    for (let index = 0; index < count; index += 1) {
+      const particle = document.createElement("i");
+      particle.className = "fx-particle";
+      particle.style.setProperty("--angle", `${(360 / count) * index + Math.random() * 12}deg`);
+      particle.style.setProperty("--distance", `${tier === "ultra" ? -65 - Math.random() * 35 : -42 - Math.random() * 22}px`);
+      scoreFxLayer.append(particle);
+    }
+  }
+  scoreBurst.className = `score-burst ${tier}`;
+  scoreFxLayer.className = `score-fx-layer ${tier}`;
+  canvasFrame.classList.remove("fx-fast", "fx-ultra");
   void scoreBurst.offsetWidth;
   scoreBurst.classList.add("show");
+  if (tier !== "normal") canvasFrame.classList.add(tier === "ultra" ? "fx-ultra" : "fx-fast");
 }
 function announce(message) { liveStatus.textContent = message; }
 function updateState(value) { stateEl.textContent = value; }
@@ -349,8 +371,11 @@ emojiForm.addEventListener("submit", event => { event.preventDefault(); recordSc
 randomEmojiBtn.addEventListener("click", rollEmoji);
 clearScoresBtn.addEventListener("click", () => {
   scores = [];
+  highScore = 0;
   saveLeaderboard();
+  saveHighScore();
   renderLeaderboard();
+  updateHud();
 });
 languageToggle.addEventListener("click", () => {
   language = language === "zh" ? "en" : "zh";
