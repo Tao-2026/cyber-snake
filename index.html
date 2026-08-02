@@ -29,6 +29,11 @@
         <div class="stat"><span>HIGH SCORE</span><strong id="highScore">0000</strong></div>
         <div class="stat"><span>SPEED</span><strong id="speed">01</strong></div>
         <div class="divider"></div>
+        <div class="leaderboard" aria-label="Top 3 排行榜">
+          <div class="leaderboard-heading"><p class="leaderboard-title">TOP 3 // HALL OF FAME</p><button id="clearScoresBtn" type="button">清空</button></div>
+          <ol id="leaderboardList"></ol>
+        </div>
+        <div class="divider"></div>
         <p id="statsHint" class="microcopy">吞噬数据核心以增长。速度会随分数提升。</p>
       </aside>
 
@@ -42,6 +47,11 @@
             <p id="overlayKicker" class="overlay-kicker">NEURAL LINK READY</p>
             <h2 id="overlayTitle">CYBER SNAKE</h2>
             <p id="overlayText">接入霓虹网络，收集数据核心。</p>
+            <form id="nameForm" class="name-form hidden" autocomplete="off">
+              <label id="nameLabel" for="playerName">输入 3 字符留名</label>
+              <div><input id="playerName" name="playerName" maxlength="3" required spellcheck="false" aria-describedby="nameHint"><button id="saveScoreBtn" type="submit">记录</button></div>
+              <small id="nameHint">字母、数字或中文</small>
+            </form>
             <button id="primaryBtn" class="btn btn-primary" type="button">开始游戏</button>
           </div>
         </div>

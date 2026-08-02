@@ -6,6 +6,7 @@ const MIN_DELAY = 62;
 const SCORE_STEP = 10;
 const STORAGE_KEY = "cyberSnake.highScore";
 const LANGUAGE_KEY = "cyberSnake.language";
+const LEADERBOARD_KEY = "cyberSnake.leaderboard";
 
 const canvas = document.querySelector("#gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -25,6 +26,14 @@ const languageToggle = document.querySelector("#languageToggle");
 const statsHint = document.querySelector("#statsHint");
 const moveHint = document.querySelector("#moveHint");
 const pauseHint = document.querySelector("#pauseHint");
+const leaderboardList = document.querySelector("#leaderboardList");
+const leaderboard = document.querySelector(".leaderboard");
+const nameForm = document.querySelector("#nameForm");
+const nameLabel = document.querySelector("#nameLabel");
+const nameInput = document.querySelector("#playerName");
+const nameHint = document.querySelector("#nameHint");
+const saveScoreBtn = document.querySelector("#saveScoreBtn");
+const clearScoresBtn = document.querySelector("#clearScoresBtn");
 
 const copy = {
   zh: {
@@ -33,7 +42,7 @@ const copy = {
     canvasLabel:"贪吃蛇游戏区域。按开始游戏，然后使用方向键或 WASD 控制。", gameLabel:"Cyber Snake 游戏", statsLabel:"游戏数据", controlsLabel:"操作说明", touchLabel:"触屏方向控制", directions:["向上","向左","向下","向右"],
     running:"RUNNING", paused:"PAUSED", terminated:"RUN TERMINATED", startAnnounce:"游戏开始", pausedAnnounce:"游戏已暂停", resumeAnnounce:"游戏继续", readyAnnounce:"游戏待开始",
     scoreAnnounce:value=>`获得 ${SCORE_STEP} 分，当前 ${value} 分`, pauseTitle:"已暂停", pauseText:"按空格或点击继续返回网络。", resumeGame:"继续游戏", overTitle:"游戏结束", retry:"重新挑战",
-    overText:(value,best)=>`最终得分 ${value}。最高分 ${best}。`, overAnnounce:value=>`游戏结束，最终得分 ${value}`
+    overText:(value,best)=>`最终得分 ${value}。最高分 ${best}。`, overAnnounce:value=>`游戏结束，最终得分 ${value}`, leaderboardLabel:"Top 3 排行榜", emptyName:"---", qualifiedTitle:"破榜成功", qualifiedText:value=>`${value} 分进入 TOP 3，请留下名字。`, nameLabel:"输入 3 字符留名", nameHint:"字母、数字或中文", save:"记录", skip:"跳过 / 重试", savedTitle:"记录完成", savedText:name=>`${name} 已进入名人堂。`, clear:"清空", clearConfirm:"确定清空 TOP 3 排行榜吗？"
   },
   en: {
     switchLabel:"切换到中文", toggle:"中", readyKicker:"NEURAL LINK READY", readyTitle:"CYBER SNAKE", readyText:"Enter the neon grid and collect data cores.", start:"Start game",
@@ -41,7 +50,7 @@ const copy = {
     canvasLabel:"Snake game area. Start the game, then use arrow keys or WASD to steer.", gameLabel:"Cyber Snake game", statsLabel:"Game statistics", controlsLabel:"Instructions", touchLabel:"Touch direction controls", directions:["Up","Left","Down","Right"],
     running:"RUNNING", paused:"PAUSED", terminated:"RUN TERMINATED", startAnnounce:"Game started", pausedAnnounce:"Game paused", resumeAnnounce:"Game resumed", readyAnnounce:"Game ready",
     scoreAnnounce:value=>`Scored ${SCORE_STEP} points. Total ${value}.`, pauseTitle:"PAUSED", pauseText:"Press Space or Resume to return to the grid.", resumeGame:"Resume game", overTitle:"GAME OVER", retry:"Try again",
-    overText:(value,best)=>`Final score ${value}. High score ${best}.`, overAnnounce:value=>`Game over. Final score ${value}.`
+    overText:(value,best)=>`Final score ${value}. High score ${best}.`, overAnnounce:value=>`Game over. Final score ${value}.`, leaderboardLabel:"Top 3 leaderboard", emptyName:"---", qualifiedTitle:"NEW HIGH SCORE", qualifiedText:value=>`${value} points made the TOP 3. Enter your name.`, nameLabel:"Enter 3 characters", nameHint:"Letters, numbers, or CJK", save:"Save", skip:"Skip / retry", savedTitle:"SCORE SAVED", savedText:name=>`${name} entered the Hall of Fame.`, clear:"Clear", clearConfirm:"Clear the TOP 3 leaderboard?"
   }
 };
 
@@ -55,10 +64,23 @@ let status = "ready";
 let timer = null;
 let touchStart = null;
 let language = loadLanguage();
+let scores = loadLeaderboard();
+let awaitingName = false;
 
 function loadLanguage() {
   try { return localStorage.getItem(LANGUAGE_KEY) === "en" ? "en" : "zh"; }
   catch { return "zh"; }
+}
+
+function loadLeaderboard() {
+  try {
+    const value = JSON.parse(localStorage.getItem(LEADERBOARD_KEY) || "[]");
+    return Array.isArray(value) ? value.filter(entry => entry && typeof entry.name === "string" && Number.isFinite(entry.score)).slice(0, 3) : [];
+  } catch { return []; }
+}
+
+function saveLeaderboard() {
+  try { localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(scores)); } catch { /* Storage may be disabled. */ }
 }
 
 function text(key, ...args) {
@@ -77,10 +99,15 @@ function applyLanguage() {
   document.querySelector(".stats-panel").setAttribute("aria-label", text("statsLabel"));
   document.querySelector(".controls-panel").setAttribute("aria-label", text("controlsLabel"));
   document.querySelector(".touch-controls").setAttribute("aria-label", text("touchLabel"));
+  leaderboard.setAttribute("aria-label", text("leaderboardLabel"));
+  nameLabel.textContent = text("nameLabel"); nameHint.textContent = text("nameHint"); saveScoreBtn.textContent = text("save");
+  clearScoresBtn.textContent = text("clear");
   document.querySelectorAll("[data-direction]").forEach((button, index) => button.setAttribute("aria-label", text("directions")[index]));
   if (status === "ready") { showOverlay(text("readyKicker"), text("readyTitle"), text("readyText"), text("start"), false); announce(text("readyAnnounce")); }
   else if (status === "paused") showOverlay("CONNECTION SUSPENDED", text("pauseTitle"), text("pauseText"), text("resumeGame"), false);
+  else if (status === "over" && awaitingName) showOverlay("HALL OF FAME", text("qualifiedTitle"), text("qualifiedText", score), text("skip"), false);
   else if (status === "over") showOverlay("SIGNAL LOST", text("overTitle"), text("overText", score, highScore), text("retry"), false);
+  renderLeaderboard();
 }
 
 function loadHighScore() {
@@ -101,7 +128,7 @@ function resetModel() {
   direction = { x: 1, y: 0 };
   queuedDirection = { ...direction };
   score = 0;
-  placeFood();
+  food = { x: 12, y: 12 };
   updateHud();
   draw();
 }
@@ -110,6 +137,8 @@ function startGame() {
   clearTimer();
   resetModel();
   status = "running";
+  awaitingName = false;
+  nameForm.classList.add("hidden");
   overlay.classList.add("hidden");
   pauseBtn.disabled = false;
   pauseBtn.textContent = text("pause");
@@ -182,9 +211,50 @@ function endGame() {
   status = "over";
   clearTimer();
   pauseBtn.disabled = true;
-  showOverlay("SIGNAL LOST", text("overTitle"), text("overText", score, highScore), text("retry"));
+  awaitingName = qualifiesForLeaderboard(score);
+  if (awaitingName) {
+    showOverlay("HALL OF FAME", text("qualifiedTitle"), text("qualifiedText", score), text("skip"), false);
+    nameForm.classList.remove("hidden");
+    nameInput.value = "";
+    nameInput.focus({ preventScroll:true });
+  } else showOverlay("SIGNAL LOST", text("overTitle"), text("overText", score, highScore), text("retry"));
   updateState(text("terminated"));
   announce(text("overAnnounce", score));
+}
+
+function qualifiesForLeaderboard(value) {
+  return value > 0 && (scores.length < 3 || value > scores[scores.length - 1].score);
+}
+
+function renderLeaderboard() {
+  leaderboardList.replaceChildren();
+  for (let index = 0; index < 3; index += 1) {
+    const entry = scores[index];
+    const item = document.createElement("li");
+    const name = document.createElement("span");
+    const value = document.createElement("span");
+    name.textContent = entry ? entry.name : text("emptyName");
+    value.textContent = entry ? formatScore(entry.score) : "----";
+    if (!entry) name.className = "empty";
+    value.className = "leader-score";
+    item.append(name, value);
+    leaderboardList.append(item);
+  }
+  clearScoresBtn.disabled = scores.length === 0;
+}
+
+function recordScore(rawName) {
+  const cleaned = Array.from(rawName.trim().toUpperCase()).filter(char => /[\p{L}\p{N}]/u.test(char)).slice(0, 3).join("");
+  if (!cleaned) { nameInput.focus(); return; }
+  scores.push({ name:cleaned, score });
+  scores.sort((a, b) => b.score - a.score);
+  scores = scores.slice(0, 3);
+  saveLeaderboard();
+  awaitingName = false;
+  nameForm.classList.add("hidden");
+  renderLeaderboard();
+  showOverlay("HALL OF FAME", text("savedTitle"), text("savedText", cleaned), text("retry"));
+  announce(text("savedText", cleaned));
 }
 
 function showOverlay(kicker, title, body, button, focus = true) {
@@ -235,6 +305,13 @@ document.addEventListener("keydown", event => {
 primaryBtn.addEventListener("click", () => status === "paused" ? togglePause() : startGame());
 pauseBtn.addEventListener("click", togglePause);
 restartBtn.addEventListener("click", startGame);
+nameForm.addEventListener("submit", event => { event.preventDefault(); recordScore(nameInput.value); });
+clearScoresBtn.addEventListener("click", () => {
+  if (!window.confirm(text("clearConfirm"))) return;
+  scores = [];
+  saveLeaderboard();
+  renderLeaderboard();
+});
 languageToggle.addEventListener("click", () => {
   language = language === "zh" ? "en" : "zh";
   try { localStorage.setItem(LANGUAGE_KEY, language); } catch { /* Storage may be disabled. */ }
