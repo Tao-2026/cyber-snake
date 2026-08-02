@@ -5,6 +5,7 @@ const BASE_DELAY = 145;
 const MIN_DELAY = 62;
 const SCORE_STEP = 10;
 const STORAGE_KEY = "cyberSnake.highScore";
+const LANGUAGE_KEY = "cyberSnake.language";
 
 const canvas = document.querySelector("#gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -20,6 +21,29 @@ const overlayText = document.querySelector("#overlayText");
 const primaryBtn = document.querySelector("#primaryBtn");
 const pauseBtn = document.querySelector("#pauseBtn");
 const restartBtn = document.querySelector("#restartBtn");
+const languageToggle = document.querySelector("#languageToggle");
+const statsHint = document.querySelector("#statsHint");
+const moveHint = document.querySelector("#moveHint");
+const pauseHint = document.querySelector("#pauseHint");
+
+const copy = {
+  zh: {
+    switchLabel:"Switch to English", toggle:"EN", readyKicker:"NEURAL LINK READY", readyTitle:"CYBER SNAKE", readyText:"接入霓虹网络，收集数据核心。", start:"开始游戏",
+    statsHint:"吞噬数据核心以增长。速度会随分数提升。", moveHint:"或 WASD 移动", pauseHint:"暂停 / 继续", pause:"暂停", resume:"继续", restart:"重新开始",
+    canvasLabel:"贪吃蛇游戏区域。按开始游戏，然后使用方向键或 WASD 控制。", gameLabel:"Cyber Snake 游戏", statsLabel:"游戏数据", controlsLabel:"操作说明", touchLabel:"触屏方向控制", directions:["向上","向左","向下","向右"],
+    running:"RUNNING", paused:"PAUSED", terminated:"RUN TERMINATED", startAnnounce:"游戏开始", pausedAnnounce:"游戏已暂停", resumeAnnounce:"游戏继续", readyAnnounce:"游戏待开始",
+    scoreAnnounce:value=>`获得 ${SCORE_STEP} 分，当前 ${value} 分`, pauseTitle:"已暂停", pauseText:"按空格或点击继续返回网络。", resumeGame:"继续游戏", overTitle:"游戏结束", retry:"重新挑战",
+    overText:(value,best)=>`最终得分 ${value}。最高分 ${best}。`, overAnnounce:value=>`游戏结束，最终得分 ${value}`
+  },
+  en: {
+    switchLabel:"切换到中文", toggle:"中", readyKicker:"NEURAL LINK READY", readyTitle:"CYBER SNAKE", readyText:"Enter the neon grid and collect data cores.", start:"Start game",
+    statsHint:"Consume data cores to grow. Speed increases with your score.", moveHint:"or WASD to move", pauseHint:"Pause / resume", pause:"Pause", resume:"Resume", restart:"Restart",
+    canvasLabel:"Snake game area. Start the game, then use arrow keys or WASD to steer.", gameLabel:"Cyber Snake game", statsLabel:"Game statistics", controlsLabel:"Instructions", touchLabel:"Touch direction controls", directions:["Up","Left","Down","Right"],
+    running:"RUNNING", paused:"PAUSED", terminated:"RUN TERMINATED", startAnnounce:"Game started", pausedAnnounce:"Game paused", resumeAnnounce:"Game resumed", readyAnnounce:"Game ready",
+    scoreAnnounce:value=>`Scored ${SCORE_STEP} points. Total ${value}.`, pauseTitle:"PAUSED", pauseText:"Press Space or Resume to return to the grid.", resumeGame:"Resume game", overTitle:"GAME OVER", retry:"Try again",
+    overText:(value,best)=>`Final score ${value}. High score ${best}.`, overAnnounce:value=>`Game over. Final score ${value}.`
+  }
+};
 
 let snake = [];
 let food = { x: 17, y: 12 };
@@ -30,6 +54,34 @@ let highScore = loadHighScore();
 let status = "ready";
 let timer = null;
 let touchStart = null;
+let language = loadLanguage();
+
+function loadLanguage() {
+  try { return localStorage.getItem(LANGUAGE_KEY) === "en" ? "en" : "zh"; }
+  catch { return "zh"; }
+}
+
+function text(key, ...args) {
+  const value = copy[language][key];
+  return typeof value === "function" ? value(...args) : value;
+}
+
+function applyLanguage() {
+  document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
+  languageToggle.textContent = text("toggle");
+  languageToggle.setAttribute("aria-label", text("switchLabel"));
+  statsHint.textContent = text("statsHint"); moveHint.textContent = text("moveHint"); pauseHint.textContent = text("pauseHint");
+  pauseBtn.textContent = status === "paused" ? text("resume") : text("pause"); restartBtn.textContent = text("restart");
+  canvas.setAttribute("aria-label", text("canvasLabel"));
+  document.querySelector(".game-layout").setAttribute("aria-label", text("gameLabel"));
+  document.querySelector(".stats-panel").setAttribute("aria-label", text("statsLabel"));
+  document.querySelector(".controls-panel").setAttribute("aria-label", text("controlsLabel"));
+  document.querySelector(".touch-controls").setAttribute("aria-label", text("touchLabel"));
+  document.querySelectorAll("[data-direction]").forEach((button, index) => button.setAttribute("aria-label", text("directions")[index]));
+  if (status === "ready") { showOverlay(text("readyKicker"), text("readyTitle"), text("readyText"), text("start"), false); announce(text("readyAnnounce")); }
+  else if (status === "paused") showOverlay("CONNECTION SUSPENDED", text("pauseTitle"), text("pauseText"), text("resumeGame"), false);
+  else if (status === "over") showOverlay("SIGNAL LOST", text("overTitle"), text("overText", score, highScore), text("retry"), false);
+}
 
 function loadHighScore() {
   try { return Math.max(0, Number.parseInt(localStorage.getItem(STORAGE_KEY), 10) || 0); }
@@ -60,9 +112,9 @@ function startGame() {
   status = "running";
   overlay.classList.add("hidden");
   pauseBtn.disabled = false;
-  pauseBtn.textContent = "暂停";
-  updateState("RUNNING");
-  announce("游戏开始");
+  pauseBtn.textContent = text("pause");
+  updateState(text("running"));
+  announce(text("startAnnounce"));
   canvas.focus({ preventScroll: true });
   scheduleTick();
 }
@@ -86,7 +138,7 @@ function tick() {
     score += SCORE_STEP;
     if (score > highScore) { highScore = score; saveHighScore(); }
     placeFood();
-    announce(`获得 ${SCORE_STEP} 分，当前 ${score} 分`);
+    announce(text("scoreAnnounce", score));
   } else snake.pop();
   updateHud();
   draw();
@@ -111,16 +163,16 @@ function togglePause() {
   if (status === "running") {
     status = "paused";
     clearTimer();
-    pauseBtn.textContent = "继续";
-    showOverlay("CONNECTION SUSPENDED", "已暂停", "按空格或点击继续返回网络。", "继续游戏");
-    updateState("PAUSED");
-    announce("游戏已暂停");
+    pauseBtn.textContent = text("resume");
+    showOverlay("CONNECTION SUSPENDED", text("pauseTitle"), text("pauseText"), text("resumeGame"));
+    updateState(text("paused"));
+    announce(text("pausedAnnounce"));
   } else if (status === "paused") {
     status = "running";
     overlay.classList.add("hidden");
-    pauseBtn.textContent = "暂停";
+    pauseBtn.textContent = text("pause");
     updateState("RUNNING");
-    announce("游戏继续");
+    announce(text("resumeAnnounce"));
     canvas.focus({ preventScroll: true });
     scheduleTick();
   }
@@ -130,18 +182,18 @@ function endGame() {
   status = "over";
   clearTimer();
   pauseBtn.disabled = true;
-  showOverlay("SIGNAL LOST", "游戏结束", `最终得分 ${score}。最高分 ${highScore}。`, "重新挑战");
-  updateState("RUN TERMINATED");
-  announce(`游戏结束，最终得分 ${score}`);
+  showOverlay("SIGNAL LOST", text("overTitle"), text("overText", score, highScore), text("retry"));
+  updateState(text("terminated"));
+  announce(text("overAnnounce", score));
 }
 
-function showOverlay(kicker, title, text, button) {
+function showOverlay(kicker, title, body, button, focus = true) {
   overlayKicker.textContent = kicker;
   overlayTitle.textContent = title;
-  overlayText.textContent = text;
+  overlayText.textContent = body;
   primaryBtn.textContent = button;
   overlay.classList.remove("hidden");
-  primaryBtn.focus({ preventScroll: true });
+  if (focus) primaryBtn.focus({ preventScroll: true });
 }
 
 function clearTimer() { if (timer !== null) { clearTimeout(timer); timer = null; } }
@@ -183,6 +235,11 @@ document.addEventListener("keydown", event => {
 primaryBtn.addEventListener("click", () => status === "paused" ? togglePause() : startGame());
 pauseBtn.addEventListener("click", togglePause);
 restartBtn.addEventListener("click", startGame);
+languageToggle.addEventListener("click", () => {
+  language = language === "zh" ? "en" : "zh";
+  try { localStorage.setItem(LANGUAGE_KEY, language); } catch { /* Storage may be disabled. */ }
+  applyLanguage();
+});
 document.querySelectorAll("[data-direction]").forEach(button => button.addEventListener("pointerdown", () => {
   const map = { up:{x:0,y:-1}, down:{x:0,y:1}, left:{x:-1,y:0}, right:{x:1,y:0} };
   setDirection(map[button.dataset.direction]);
@@ -197,5 +254,5 @@ canvas.addEventListener("pointerup", event => {
 });
 document.addEventListener("visibilitychange", () => { if (document.hidden && status === "running") togglePause(); });
 
-updateHud();
 resetModel();
+applyLanguage();

@@ -14,6 +14,9 @@ h1 { margin:0; font-size:clamp(2rem,5vw,4.2rem); line-height:.9; letter-spacing:
 h1 em { color:var(--cyan); font-style:normal; }
 .system-state { display:flex; align-items:center; gap:9px; padding-bottom:5px; }
 .system-state i { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 10px var(--green); }
+.header-tools { display:flex; align-items:center; gap:16px; }
+.language-toggle { min-width:48px; min-height:36px; padding:6px 10px; color:var(--cyan); border:1px solid var(--line); background:rgba(12,16,32,.85); cursor:pointer; letter-spacing:.12em; box-shadow:inset 0 0 12px rgba(22,247,255,.04); }
+.language-toggle:hover,.language-toggle:focus-visible { color:#051014; background:var(--cyan); outline:2px solid #fff; outline-offset:2px; }
 .game-layout { display:grid; grid-template-columns:190px minmax(300px,600px) 190px; align-items:center; justify-content:center; gap:25px; }
 .panel { position:relative; padding:18px; border:1px solid var(--line); background:linear-gradient(145deg,rgba(14,22,42,.9),rgba(7,9,18,.75)); box-shadow:inset 0 0 25px rgba(22,247,255,.025); }
 .panel::before { content:""; position:absolute; left:-1px; top:-1px; width:35px; border-top:2px solid var(--cyan); }
@@ -49,5 +52,5 @@ footer { display:flex; justify-content:space-between; gap:15px; margin-top:24px;
 .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0; }
 @keyframes drift { 50%{transform:translateY(-25px);opacity:.8} }
 @media (max-width:900px){.game-layout{grid-template-columns:150px minmax(300px,560px)}.controls-panel{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center}.controls-panel .panel-label,.controls-panel .key-grid,.controls-panel .divider{display:none}.controls-panel p{margin:0}.controls-panel .btn{margin:0}}
-@media (max-width:650px){.shell{width:min(100% - 22px,560px);padding-top:18px}.masthead{align-items:center}.system-state{font-size:.55rem}.game-layout{display:flex;flex-direction:column;gap:14px}.arena-wrap{width:100%}.stats-panel{width:100%;display:grid;grid-template-columns:repeat(3,1fr);padding:12px 15px}.stats-panel .panel-label,.stats-panel .divider,.stats-panel .microcopy{display:none}.stat{margin:0;text-align:center}.stat strong{font-size:1.25rem}.controls-panel{width:100%;grid-template-columns:1fr 1fr}.controls-panel p{display:none}.touch-controls{display:grid}footer{font-size:.5rem}.ambient{display:none}}
+@media (max-width:650px){.shell{width:min(100% - 22px,560px);padding-top:18px}.masthead{align-items:center}.header-tools{gap:8px}.system-state{display:none}.language-toggle{min-width:44px}.game-layout{display:flex;flex-direction:column;gap:14px}.arena-wrap{width:100%}.stats-panel{width:100%;display:grid;grid-template-columns:repeat(3,1fr);padding:12px 15px}.stats-panel .panel-label,.stats-panel .divider,.stats-panel .microcopy{display:none}.stat{margin:0;text-align:center}.stat strong{font-size:1.25rem}.controls-panel{width:100%;grid-template-columns:1fr 1fr}.controls-panel p{display:none}.touch-controls{display:grid}footer{font-size:.5rem}.ambient{display:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
