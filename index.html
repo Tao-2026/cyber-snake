@@ -1,190 +1,92 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CyberSnake - Neon Arcade Game</title>
-<style>
-body {
-  margin: 0; padding: 0; background-color: #0d0e15; color: #00ffcc;
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  min-height: 100vh; overflow: hidden;
-}
-.game-container { display: flex; flex-direction: column; align-items: center; position: relative; }
-h1 {
-  font-size: 2.5rem; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 4px; color: #fff;
-  text-shadow: 0 0 5px #fff, 0 0 10px #00ffcc, 0 0 20px #00ffcc, 0 0 4px #00ffcc;
-}
-.score-board { font-size: 1.2rem; margin-bottom: 15px; font-weight: bold; letter-spacing: 1px; color: #ff007f; text-shadow: 0 0 8px #ff007f; }
-canvas { background-color: #141622; border: 4px solid #00ffcc; box-shadow: 0 0 20px #00ffcc, inset 0 0 15px rgba(0, 255, 204, 0.2); border-radius: 8px; }
-.button-controls { margin-top: 15px; display: flex; gap: 15px; }
-.overlay {
-  position: absolute; top: 85px; width: 400px; height: 400px; background: rgba(13, 14, 21, 0.9);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; z-index: 10; transition: all 0.3s ease;
-}
-.hidden { display: none !important; opacity: 0; pointer-events: none; }
-.game-over-text { color: #ff007f; font-size: 2rem; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; text-shadow: 0 0 10px #ff007f; }
-.cyber-btn {
-  background: transparent; color: #00ffcc; border: 2px solid #00ffcc; padding: 12px 30px; font-size: 1.1rem;
-  font-weight: bold; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; border-radius: 4px;
-  position: relative; overflow: hidden; transition: all 0.2s ease; box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
-}
-.cyber-btn:hover { background: #00ffcc; color: #000; box-shadow: 0 0 20px #00ffcc; text-shadow: none; }
-.cyber-btn:active { transform: scale(0.95); }
-.cyber-btn.pause-style { color: #ffaa00; border-color: #ffaa00; box-shadow: 0 0 10px rgba(255, 170, 0, 0.3); }
-.cyber-btn.pause-style:hover { background: #ffaa00; color: #000; box-shadow: 0 0 20px #ffaa00; }
-.controls-tip { margin-top: 15px; font-size: 0.85rem; color: #64748b; text-align: center; }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#070912">
+  <meta name="description" content="Cyber Snake — 一款支持键盘与触屏的赛博朋克贪吃蛇游戏。">
+  <title>Cyber Snake // Neon Protocol</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="game-container">
-  <h1>Cyber Snake</h1>
-  <div class="score-board">SCORE: <span id="score">0</span></div>
-  <canvas id="gameCanvas" width="400" height="400"></canvas>
-  <div id="gameOverlay" class="overlay">
-    <div id="gameOverMessage" class="game-over-text hidden">GAME OVER</div>
-    <button id="actionBtn" class="cyber-btn">START GAME</button>
-  </div>
-  <div class="button-controls">
-    <button id="pauseBtn" class="cyber-btn pause-style">PAUSE</button>
-  </div>
-  <div class="controls-tip">
-    Use arrow keys (↑ ↓ ← →) to steer the snake<br>
-    Press <strong>Spacebar</strong> or click PAUSE to freeze time
-  </div>
-</div>
-<script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const scoreElement = document.getElementById('score');
-const overlay = document.getElementById('gameOverlay');
-const gameOverMessage = document.getElementById('gameOverMessage');
-const actionBtn = document.getElementById('actionBtn');
-const pauseBtn = document.getElementById('pauseBtn');
+  <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
+  <main class="shell">
+    <header class="masthead">
+      <div>
+        <p class="eyebrow">ARCADE SYSTEM // 001</p>
+        <h1>CYBER <em>SNAKE</em></h1>
+      </div>
+      <div class="header-tools">
+        <button id="languageToggle" class="language-toggle" type="button" aria-label="Switch to English">EN</button>
+        <div class="system-state"><i></i><span id="systemState">SYSTEM READY</span></div>
+      </div>
+    </header>
 
-const gridSize = 20;
-const tileCount = canvas.width / gridSize;
+    <section class="game-layout" aria-label="Cyber Snake 游戏">
+      <aside class="panel stats-panel" aria-label="游戏数据">
+        <div class="panel-label">RUN DATA</div>
+        <div class="stat"><span id="coresLabel">TOTAL CORES</span><strong id="cores">000</strong></div>
+        <div class="stat"><span id="currentScoreLabel">CURRENT SCORE</span><strong id="currentScore">0000</strong></div>
+        <div class="stat"><span id="speedLabel">SPEED</span><strong id="speed">01</strong></div>
+        <div class="divider"></div>
+        <div class="leaderboard" aria-label="Top 3 排行榜">
+          <div class="leaderboard-heading"><p class="leaderboard-title">TOP 3 // HALL OF FAME</p><button id="clearScoresBtn" type="button">清空</button></div>
+          <div id="podium" class="podium" aria-live="polite">
+            <article class="podium-place place-2" data-rank="2"><span class="podium-emoji" aria-hidden="true">❔</span><div class="podium-block"><b>#2</b><strong>----</strong></div></article>
+            <article class="podium-place place-1" data-rank="1"><span class="podium-emoji" aria-hidden="true">❔</span><div class="podium-block"><b>#1</b><strong>----</strong></div></article>
+            <article class="podium-place place-3" data-rank="3"><span class="podium-emoji" aria-hidden="true">❔</span><div class="podium-block"><b>#3</b><strong>----</strong></div></article>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <p id="statsHint" class="microcopy">吞噬数据核心以增长。速度会随分数提升。</p>
+      </aside>
 
-let snake = [];
-let food = { x: 0, y: 0 };
-let dx = gridSize;
-let dy = 0;
-let score = 0;
-let gameLoopInterval = null;
-let isGameRunning = false;
-let isPaused = false;
-let gameSpeed = 100;
-let changingDirection = false;
+      <section class="arena-wrap">
+        <div class="corner corner-a" aria-hidden="true"></div>
+        <div class="corner corner-b" aria-hidden="true"></div>
+        <div id="scoreBurst" class="score-burst" aria-hidden="true"><strong id="burstPoints"></strong><small id="burstTier"></small></div>
+        <div class="canvas-frame" id="canvasFrame">
+          <canvas id="gameCanvas" width="600" height="600" tabindex="0" aria-label="贪吃蛇游戏区域。按开始游戏，然后使用方向键或 WASD 控制。"></canvas>
+          <div class="scanlines" aria-hidden="true"></div>
+          <div id="scoreFxLayer" class="score-fx-layer" aria-hidden="true"><span class="impact-ring"></span></div>
+          <div id="gameOverlay" class="overlay">
+            <p id="overlayKicker" class="overlay-kicker">NEURAL LINK READY</p>
+            <h2 id="overlayTitle">CYBER SNAKE</h2>
+            <p id="overlayText">接入霓虹网络，收集数据核心。</p>
+            <form id="emojiForm" class="emoji-form hidden">
+              <p id="emojiLabel">随机选择你的领奖台角色</p>
+              <div class="emoji-preview" aria-live="polite"><span id="candidateEmoji">❔</span></div>
+              <div class="emoji-actions"><button id="randomEmojiBtn" type="button">🎲 随机 Emoji</button><button id="saveScoreBtn" type="submit" disabled>确认登台</button></div>
+              <small id="emojiHint">不满意可以继续随机</small>
+            </form>
+            <button id="primaryBtn" class="btn btn-primary" type="button">开始游戏</button>
+          </div>
+        </div>
+        <p id="liveStatus" class="sr-only" aria-live="polite">游戏待开始</p>
+      </section>
 
-function initGame() {
-  snake = [
-    { x: gridSize * 5, y: gridSize * 5 },
-    { x: gridSize * 4, y: gridSize * 5 },
-    { x: gridSize * 3, y: gridSize * 5 }
-  ];
-  dx = gridSize; dy = 0; score = 0;
-  scoreElement.textContent = score;
-  changingDirection = false;
-  isPaused = false;
-  pauseBtn.textContent = 'PAUSE';
-  generateFood();
-}
+      <aside class="panel controls-panel" aria-label="操作说明">
+        <div class="panel-label">CONTROLS</div>
+        <div class="key-grid" aria-hidden="true">
+          <span></span><kbd>W</kbd><span></span><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
+        </div>
+        <p><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> <span id="moveHint">或 WASD 移动</span></p>
+        <p><kbd>Space</kbd> <span id="pauseHint">暂停 / 继续</span></p>
+        <div class="divider"></div>
+        <button id="pauseBtn" class="btn btn-secondary" type="button" disabled>暂停</button>
+        <button id="restartBtn" class="btn btn-ghost" type="button">重新开始</button>
+      </aside>
+    </section>
 
-function generateFood() {
-  food.x = Math.floor(Math.random() * tileCount) * gridSize;
-  food.y = Math.floor(Math.random() * tileCount) * gridSize;
-  snake.forEach(part => {
-    if (part.x === food.x && part.y === food.y) generateFood();
-  });
-}
+    <nav class="touch-controls" aria-label="触屏方向控制">
+      <button type="button" data-direction="up" aria-label="向上">▲</button>
+      <button type="button" data-direction="left" aria-label="向左">◀</button>
+      <button type="button" data-direction="down" aria-label="向下">▼</button>
+      <button type="button" data-direction="right" aria-label="向右">▶</button>
+    </nav>
 
-function mainLoop() {
-  if (isPaused) return;
-  if (hasGameEnded()) { endGame(); return; }
-  changingDirection = false;
-  clearCanvas(); drawFood(); moveSnake(); drawSnake();
-}
-
-function clearCanvas() {
-  ctx.fillStyle = '#141622';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
-
-function drawSnake() {
-  snake.forEach((part, index) => {
-    ctx.fillStyle = (index === 0) ? '#00ffcc' : '#00b3ff';
-    ctx.shadowBlur = (index === 0) ? 12 : 6;
-    ctx.shadowColor = ctx.fillStyle;
-    ctx.fillRect(part.x + 1, part.y + 1, gridSize - 2, gridSize - 2);
-  });
-  ctx.shadowBlur = 0;
-}
-
-// 修复了这里原本缺少 [0] 导致的逻辑错误
-function drawFood() {
-  ctx.fillStyle = '#ff007f'; ctx.shadowBlur = 15; ctx.shadowColor = '#ff007f';
-  ctx.fillRect(food.x + 2, food.y + 2, gridSize - 4, gridSize - 4);
-  ctx.shadowBlur = 0;
-}
-
-function moveSnake() {
-  const head = { x: snake[0].x + dx, y: snake[0].y + dy };
-  snake.unshift(head);
-  if (snake[0].x === food.x && snake[0].y === food.y) {
-    score += 10; scoreElement.textContent = score; generateFood();
-  } else {
-    snake.pop();
-  }
-}
-
-function hasGameEnded() {
-  for (let i = 4; i < snake.length; i++) {
-    if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true;
-  }
-  return snake[0].x < 0 || snake[0].x >= canvas.width || snake[0].y < 0 || snake[0].y >= canvas.height;
-}
-
-function togglePause() {
-  if (!isGameRunning) return;
-  isPaused = !isPaused;
-  if (isPaused) {
-    pauseBtn.textContent = 'RESUME';
-    ctx.fillStyle = 'rgba(13, 14, 21, 0.6)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#ffaa00'; ctx.font = 'bold 2rem sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
-  } else {
-    pauseBtn.textContent = 'PAUSE';
-  }
-}
-
-function handleKeyPress(event) {
-  if (event.keyCode === 32) { event.preventDefault(); togglePause(); return; }
-  if (changingDirection || isPaused) return;
-  const keyPressed = event.keyCode;
-  if (keyPressed === 37 && dx !== gridSize) { dx = -gridSize; dy = 0; changingDirection = true; }
-  if (keyPressed === 38 && dy !== gridSize) { dx = 0; dy = -gridSize; changingDirection = true; }
-  if (keyPressed === 39 && dx !== -gridSize) { dx = gridSize; dy = 0; changingDirection = true; }
-  if (keyPressed === 40 && dy !== -gridSize) { dx = 0; dy = gridSize; changingDirection = true; }
-}
-
-function startGame() {
-  initGame(); isGameRunning = true;
-  gameOverMessage.classList.add('hidden'); overlay.classList.add('hidden');
-  if (gameLoopInterval) clearInterval(gameLoopInterval);
-  gameLoopInterval = setInterval(mainLoop, gameSpeed);
-}
-
-function endGame() {
-  clearInterval(gameLoopInterval); isGameRunning = false;
-  gameOverMessage.classList.remove('hidden'); actionBtn.textContent = 'RESTART'; overlay.classList.remove('hidden');
-}
-
-actionBtn.addEventListener('click', startGame);
-pauseBtn.addEventListener('click', togglePause);
-document.addEventListener('keydown', handleKeyPress);
-clearCanvas();
-</script>
+    <footer><span>ARROWS / WASD / SWIPE</span><span>SPACE TO PAUSE</span><span>LOCAL HIGH SCORE ENABLED</span></footer>
+  </main>
+  <script src="game.js" defer></script>
 </body>
 </html>
