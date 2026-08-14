@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#070912">
   <meta name="description" content="Cyber Snake — 一款支持键盘与触屏的赛博朋克贪吃蛇游戏。">
   <title>Cyber Snake // Neon Protocol</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=002">
 </head>
 <body>
   <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -63,6 +63,13 @@
           </div>
         </div>
         <p id="liveStatus" class="sr-only" aria-live="polite">游戏待开始</p>
+        <nav class="touch-controls" aria-label="触屏方向控制">
+          <span class="touch-controls-label">TOUCH CONTROLS / 触屏方向</span>
+          <button type="button" data-direction="up" aria-label="向上">▲</button>
+          <button type="button" data-direction="left" aria-label="向左">◀</button>
+          <button type="button" data-direction="down" aria-label="向下">▼</button>
+          <button type="button" data-direction="right" aria-label="向右">▶</button>
+        </nav>
       </section>
 
       <aside class="panel controls-panel" aria-label="操作说明">
@@ -78,15 +85,8 @@
       </aside>
     </section>
 
-    <nav class="touch-controls" aria-label="触屏方向控制">
-      <button type="button" data-direction="up" aria-label="向上">▲</button>
-      <button type="button" data-direction="left" aria-label="向左">◀</button>
-      <button type="button" data-direction="down" aria-label="向下">▼</button>
-      <button type="button" data-direction="right" aria-label="向右">▶</button>
-    </nav>
-
     <footer><span>ARROWS / WASD / SWIPE</span><span>SPACE TO PAUSE</span><span>LOCAL HIGH SCORE ENABLED</span></footer>
   </main>
-  <script src="game.js" defer></script>
+  <script src="game.js?v=002" defer></script>
 </body>
 </html>
