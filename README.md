@@ -1,5 +1,11 @@
 # Cyber Snake
 
+## Shared leaderboard
+
+CyberSnake supports an optional Firebase Anonymous Authentication + Firestore global Top 3. The Firebase code is isolated in `firebase-config.js` and `leaderboard-service.js`; an unconfigured or unavailable service automatically falls back to the existing `localStorage` podium without interrupting gameplay.
+
+See [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) for project creation, Web App configuration, Anonymous Authentication, Firestore rules/indexes, Spark limits, test cleanup, and the server-validation upgrade path.
+
 无需构建步骤的原生 HTML、CSS、JavaScript 贪吃蛇游戏，可直接部署到 GitHub Pages。
 
 ## 本地运行
