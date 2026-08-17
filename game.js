@@ -12,6 +12,8 @@ const canvas = document.querySelector("#gameCanvas");
 const ctx = canvas.getContext("2d");
 const coresEl = document.querySelector("#cores");
 const currentScoreEl = document.querySelector("#currentScore");
+const liveScoreEl = document.querySelector("#liveScore");
+const liveScoreLabel = document.querySelector("#liveScoreLabel");
 const speedEl = document.querySelector("#speed");
 const coresLabel = document.querySelector("#coresLabel");
 const currentScoreLabel = document.querySelector("#currentScoreLabel");
@@ -50,7 +52,7 @@ const copy = {
     statsHint:"吞噬数据核心以增长。速度会随总豆数提升。", moveHint:"或 WASD 移动", pauseHint:"暂停 / 继续", pause:"暂停", resume:"继续", restart:"重新开始",
     canvasLabel:"贪吃蛇游戏区域。按开始游戏，然后使用方向键或 WASD 控制。", gameLabel:"Cyber Snake 游戏", statsLabel:"游戏数据", controlsLabel:"操作说明", touchLabel:"触屏方向控制", directions:["向上","向左","向下","向右"],
     running:"RUNNING", paused:"PAUSED", terminated:"RUN TERMINATED", startAnnounce:"游戏开始", pausedAnnounce:"游戏已暂停", resumeAnnounce:"游戏继续", readyAnnounce:"游戏待开始",
-    coresLabel:"总豆数", currentScoreLabel:"当前竞技分", speedLabel:"速度", scoreAnnounce:(earned,value,multiplier)=>`获得 ${earned} 分，倍率 ${multiplier}，当前竞技分 ${value}`, tierNormal:"核心吸收", tierFast:"快速连击 ×2", tierUltra:"极速爆分 ×3", pauseTitle:"已暂停", pauseText:"按空格或点击继续返回网络。", resumeGame:"继续游戏", overTitle:"游戏结束", retry:"重新挑战",
+    coresLabel:"总豆数", currentScoreLabel:"当前竞技分", liveScoreLabel:"当前分数", speedLabel:"速度", scoreAnnounce:(earned,value,multiplier)=>`获得 ${earned} 分，倍率 ${multiplier}，当前竞技分 ${value}`, tierNormal:"核心吸收", tierFast:"快速连击 ×2", tierUltra:"极速爆分 ×3", pauseTitle:"已暂停", pauseText:"按空格或点击继续返回网络。", resumeGame:"继续游戏", overTitle:"游戏结束", retry:"重新挑战",
     overText:(value,best,cores)=>`吞噬 ${cores} 颗豆。最终竞技分 ${value}，最高 ${best}。`, overAnnounce:(value,cores)=>`游戏结束，共 ${cores} 颗豆，最终竞技分 ${value}`, leaderboardLabel:"Top 3 Emoji 领奖台", qualifiedTitle:"破榜成功", qualifiedText:(value,cores)=>`${cores} 颗豆转化为 ${value} 分，进入 TOP 3。`, emojiLabel:"随机选择你的领奖台角色", emojiHint:"不满意可以继续随机", randomEmoji:"🎲 随机 Emoji", save:"确认登台", skip:"跳过 / 重试", savedTitle:"登台成功", savedText:emoji=>`${emoji} 已登上荣誉领奖台。`, clear:"清空", clearConfirm:"确定清空 TOP 3 领奖台吗？", rankLabel:(rank,emoji,value)=>`第 ${rank} 名，${emoji}，${value} 分`, emptyRank:rank=>`第 ${rank} 名空缺`
   },
   en: {
@@ -58,7 +60,7 @@ const copy = {
     statsHint:"Consume data cores to grow. Speed increases with total cores.", moveHint:"or WASD to move", pauseHint:"Pause / resume", pause:"Pause", resume:"Resume", restart:"Restart",
     canvasLabel:"Snake game area. Start the game, then use arrow keys or WASD to steer.", gameLabel:"Cyber Snake game", statsLabel:"Game statistics", controlsLabel:"Instructions", touchLabel:"Touch direction controls", directions:["Up","Left","Down","Right"],
     running:"RUNNING", paused:"PAUSED", terminated:"RUN TERMINATED", startAnnounce:"Game started", pausedAnnounce:"Game paused", resumeAnnounce:"Game resumed", readyAnnounce:"Game ready",
-    coresLabel:"TOTAL CORES", currentScoreLabel:"CURRENT SCORE", speedLabel:"SPEED", scoreAnnounce:(earned,value,multiplier)=>`Scored ${earned} at ×${multiplier}. Competitive score ${value}.`, tierNormal:"CORE ABSORBED", tierFast:"FAST COMBO ×2", tierUltra:"ULTRA SCORE ×3", pauseTitle:"PAUSED", pauseText:"Press Space or Resume to return to the grid.", resumeGame:"Resume game", overTitle:"GAME OVER", retry:"Try again",
+    coresLabel:"TOTAL CORES", currentScoreLabel:"CURRENT SCORE", liveScoreLabel:"LIVE SCORE", speedLabel:"SPEED", scoreAnnounce:(earned,value,multiplier)=>`Scored ${earned} at ×${multiplier}. Competitive score ${value}.`, tierNormal:"CORE ABSORBED", tierFast:"FAST COMBO ×2", tierUltra:"ULTRA SCORE ×3", pauseTitle:"PAUSED", pauseText:"Press Space or Resume to return to the grid.", resumeGame:"Resume game", overTitle:"GAME OVER", retry:"Try again",
     overText:(value,best,cores)=>`${cores} ${cores===1?"core":"cores"} consumed. Final score ${value}; best ${best}.`, overAnnounce:(value,cores)=>`Game over. ${cores} ${cores===1?"core":"cores"} and ${value} competitive points.`, leaderboardLabel:"Top 3 emoji podium", qualifiedTitle:"NEW HIGH SCORE", qualifiedText:(value,cores)=>`${cores} ${cores===1?"core":"cores"} converted into ${value} points and a TOP 3 finish.`, emojiLabel:"Randomize your podium character", emojiHint:"Keep rolling until you find your champion", randomEmoji:"🎲 Random Emoji", save:"Claim podium", skip:"Skip / retry", savedTitle:"PODIUM CLAIMED", savedText:emoji=>`${emoji} entered the Hall of Fame.`, clear:"Clear", clearConfirm:"Clear the TOP 3 podium?", rankLabel:(rank,emoji,value)=>`Rank ${rank}, ${emoji}, ${value} points`, emptyRank:rank=>`Rank ${rank} empty`
   }
 };
@@ -118,7 +120,7 @@ function applyLanguage() {
   languageToggle.setAttribute("aria-label", text("switchLabel"));
   statsHint.textContent = text("statsHint"); moveHint.textContent = text("moveHint"); pauseHint.textContent = text("pauseHint");
   updateActionButtons();
-  coresLabel.textContent = text("coresLabel"); currentScoreLabel.textContent = text("currentScoreLabel"); speedLabel.textContent = text("speedLabel");
+  coresLabel.textContent = text("coresLabel"); currentScoreLabel.textContent = text("currentScoreLabel"); liveScoreLabel.textContent = text("liveScoreLabel"); speedLabel.textContent = text("speedLabel");
   canvas.setAttribute("aria-label", text("canvasLabel"));
   document.querySelector(".game-layout").setAttribute("aria-label", text("gameLabel"));
   document.querySelector(".stats-panel").setAttribute("aria-label", text("statsLabel"));
@@ -341,7 +343,7 @@ function showScoreBurst(earned, multiplier, position) {
 }
 function announce(message) { liveStatus.textContent = message; }
 function updateState(value) { stateEl.textContent = value; }
-function updateHud() { coresEl.textContent = String(cores).padStart(3, "0"); currentScoreEl.textContent = formatScore(score); speedEl.textContent = String(level()).padStart(2, "0"); }
+function updateHud() { coresEl.textContent = String(cores).padStart(3, "0"); currentScoreEl.textContent = formatScore(score); liveScoreEl.textContent = formatScore(score); speedEl.textContent = String(level()).padStart(2, "0"); }
 
 function draw() {
   const cell = canvas.width / GRID;
