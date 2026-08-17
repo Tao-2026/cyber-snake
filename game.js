@@ -102,12 +102,22 @@ function text(key, ...args) {
   return typeof value === "function" ? value(...args) : value;
 }
 
+function updateActionButtons() {
+  const pauseText = status === "paused" ? text("resume") : text("pause");
+  const restartText = text("restart");
+  pauseBtn.textContent = pauseText;
+  pauseBtn.setAttribute("aria-label", pauseText);
+  pauseBtn.dataset.icon = status === "paused" ? "▶" : "⏸";
+  restartBtn.textContent = restartText;
+  restartBtn.setAttribute("aria-label", restartText);
+}
+
 function applyLanguage() {
   document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
   languageToggle.textContent = text("toggle");
   languageToggle.setAttribute("aria-label", text("switchLabel"));
   statsHint.textContent = text("statsHint"); moveHint.textContent = text("moveHint"); pauseHint.textContent = text("pauseHint");
-  pauseBtn.textContent = status === "paused" ? text("resume") : text("pause"); restartBtn.textContent = text("restart");
+  updateActionButtons();
   coresLabel.textContent = text("coresLabel"); currentScoreLabel.textContent = text("currentScoreLabel"); speedLabel.textContent = text("speedLabel");
   canvas.setAttribute("aria-label", text("canvasLabel"));
   document.querySelector(".game-layout").setAttribute("aria-label", text("gameLabel"));
@@ -159,7 +169,7 @@ function startGame() {
   emojiForm.classList.add("hidden");
   overlay.classList.add("hidden");
   pauseBtn.disabled = false;
-  pauseBtn.textContent = text("pause");
+  updateActionButtons();
   updateState(text("running"));
   announce(text("startAnnounce"));
   canvas.focus({ preventScroll: true });
@@ -218,7 +228,7 @@ function togglePause() {
     status = "paused";
     pausedAt = performance.now();
     clearTimer();
-    pauseBtn.textContent = text("resume");
+    updateActionButtons();
     showOverlay("CONNECTION SUSPENDED", text("pauseTitle"), text("pauseText"), text("resumeGame"));
     updateState(text("paused"));
     announce(text("pausedAnnounce"));
@@ -227,7 +237,7 @@ function togglePause() {
     if (pausedAt) lastFoodAt += performance.now() - pausedAt;
     pausedAt = 0;
     overlay.classList.add("hidden");
-    pauseBtn.textContent = text("pause");
+    updateActionButtons();
     updateState("RUNNING");
     announce(text("resumeAnnounce"));
     canvas.focus({ preventScroll: true });
