@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#070912">
   <meta name="description" content="Cyber Snake — a cyberpunk arcade game with keyboard and touch controls.">
   <title>Cyber Snake // Neon Protocol</title>
-  <link rel="stylesheet" href="styles.css?v=005">
+  <link rel="stylesheet" href="styles.css?v=006">
 </head>
 <body>
   <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -67,6 +67,7 @@
         <nav class="touch-controls" aria-label="触屏方向控制">
           <span class="touch-controls-label">TOUCH CONTROLS / 触屏方向</span>
           <button type="button" data-direction="up" aria-label="向上">▲</button>
+          <button id="mobilePauseBtn" class="mobile-pause-btn" type="button" data-icon="⏸" disabled>暂停</button>
           <button type="button" data-direction="left" aria-label="向左">◀</button>
           <button type="button" data-direction="down" aria-label="向下">▼</button>
           <button type="button" data-direction="right" aria-label="向右">▶</button>
@@ -88,6 +89,6 @@
 
     <footer><span>ARROWS / WASD / SWIPE</span><span>SPACE TO PAUSE</span><span>LOCAL HIGH SCORE ENABLED</span></footer>
   </main>
-  <script src="game.js?v=005" defer></script>
+  <script src="game.js?v=006" defer></script>
 </body>
 </html>

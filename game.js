@@ -31,6 +31,7 @@ const overlayTitle = document.querySelector("#overlayTitle");
 const overlayText = document.querySelector("#overlayText");
 const primaryBtn = document.querySelector("#primaryBtn");
 const pauseBtn = document.querySelector("#pauseBtn");
+const mobilePauseBtn = document.querySelector("#mobilePauseBtn");
 const restartBtn = document.querySelector("#restartBtn");
 const languageToggle = document.querySelector("#languageToggle");
 const statsHint = document.querySelector("#statsHint");
@@ -111,6 +112,9 @@ function updateActionButtons() {
   pauseBtn.textContent = pauseText;
   pauseBtn.setAttribute("aria-label", pauseText);
   pauseBtn.dataset.icon = status === "paused" ? "▶" : "⏸";
+  mobilePauseBtn.textContent = pauseText;
+  mobilePauseBtn.setAttribute("aria-label", pauseText);
+  mobilePauseBtn.dataset.icon = status === "paused" ? "▶" : "⏸";
   restartBtn.textContent = restartText;
   restartBtn.setAttribute("aria-label", restartText);
 }
@@ -172,6 +176,7 @@ function startGame() {
   emojiForm.classList.add("hidden");
   overlay.classList.add("hidden");
   pauseBtn.disabled = false;
+  mobilePauseBtn.disabled = false;
   updateActionButtons();
   updateState(text("running"));
   announce(text("startAnnounce"));
@@ -252,6 +257,7 @@ function endGame() {
   status = "over";
   clearTimer();
   pauseBtn.disabled = true;
+  mobilePauseBtn.disabled = true;
   awaitingEmoji = qualifiesForLeaderboard(score);
   if (awaitingEmoji) {
     showOverlay("HALL OF FAME", text("qualifiedTitle"), text("qualifiedText", score, cores), text("skip"), false);
@@ -387,6 +393,7 @@ document.addEventListener("keydown", event => {
 });
 primaryBtn.addEventListener("click", () => status === "paused" ? togglePause() : startGame());
 pauseBtn.addEventListener("click", togglePause);
+mobilePauseBtn.addEventListener("click", togglePause);
 restartBtn.addEventListener("click", startGame);
 emojiForm.addEventListener("submit", event => { event.preventDefault(); recordScore(); });
 randomEmojiBtn.addEventListener("click", rollEmoji);
