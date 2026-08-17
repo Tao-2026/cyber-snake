@@ -29,6 +29,26 @@ export function shouldReplacePersonalBest(previous, entry) {
     || (entry.score === previous.score && entry.cores > previous.cores);
 }
 
+export function createSubmissionGuard({ cooldown = SUBMIT_COOLDOWN_MS, now = () => Date.now() } = {}) {
+  let lastSubmitAt = 0;
+  let lastFingerprint = "";
+  return {
+    claim(entry) {
+      const timestamp = now();
+      const fingerprint = `${entry.score}:${entry.cores}:${entry.emoji}:${entry.runDuration}:${entry.maxLength}`;
+      if (fingerprint === lastFingerprint || timestamp - lastSubmitAt < cooldown) {
+        throw new Error("submission-throttled");
+      }
+      lastFingerprint = fingerprint;
+      lastSubmitAt = timestamp;
+    },
+    reset() {
+      lastFingerprint = "";
+      lastSubmitAt = 0;
+    }
+  };
+}
+
 function normalizeSnapshot(snapshot) {
   return snapshot.docs.map(item => {
     const data = item.data();
@@ -45,18 +65,20 @@ function normalizeSnapshot(snapshot) {
   });
 }
 
-export function createLeaderboardService({ onStatus = () => {} } = {}) {
+export function createLeaderboardService({
+  onStatus = () => {},
+  configured = FIREBASE_CONFIGURED
+} = {}) {
   let api = null;
   let auth = null;
   let db = null;
   let user = null;
-  let lastSubmitAt = 0;
-  let lastFingerprint = "";
+  const submissionGuard = createSubmissionGuard();
 
   function status(value, detail = "") { onStatus({ value, detail }); }
 
   async function init() {
-    if (!FIREBASE_CONFIGURED) {
+    if (!configured) {
       status("offline", "unconfigured");
       return { online:false, reason:"unconfigured", playerId:null, scores:[] };
     }
@@ -100,13 +122,7 @@ export function createLeaderboardService({ onStatus = () => {} } = {}) {
   async function submitScore(entry) {
     if (!api || !db || !user) throw new Error("leaderboard-offline");
     if (!isValidLeaderboardEntry(entry)) throw new TypeError("invalid-score-entry");
-    const now = Date.now();
-    const fingerprint = `${entry.score}:${entry.cores}:${entry.emoji}:${entry.runDuration}:${entry.maxLength}`;
-    if (fingerprint === lastFingerprint || now - lastSubmitAt < SUBMIT_COOLDOWN_MS) {
-      throw new Error("submission-throttled");
-    }
-    lastFingerprint = fingerprint;
-    lastSubmitAt = now;
+    submissionGuard.claim(entry);
 
     const reference = api.doc(db, COLLECTION, user.uid);
     let updated = false;
@@ -132,8 +148,7 @@ export function createLeaderboardService({ onStatus = () => {} } = {}) {
       status("synced");
       return { updated, scores, playerId:user.uid };
     } catch (error) {
-      lastFingerprint = "";
-      lastSubmitAt = 0;
+      submissionGuard.reset();
       throw error;
     }
   }

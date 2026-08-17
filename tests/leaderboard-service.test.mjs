@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   compareLeaderboardEntries,
+  createSubmissionGuard,
   createLeaderboardService,
   isValidLeaderboardEntry,
   shouldReplacePersonalBest
@@ -33,8 +34,21 @@ assert.equal(shouldReplacePersonalBest({ score:1300, cores:1 }, valid), false);
 assert.equal(shouldReplacePersonalBest({ score:1200, cores:7 }, valid), true);
 assert.equal(shouldReplacePersonalBest({ score:1200, cores:9 }, valid), false);
 
+let clock = 20000;
+const guard = createSubmissionGuard({ cooldown:15000, now:() => clock });
+guard.claim(valid);
+assert.throws(() => guard.claim(valid), /submission-throttled/);
+assert.throws(() => guard.claim({ ...valid, score:1300 }), /submission-throttled/);
+clock += 15001;
+guard.claim({ ...valid, score:1300 });
+guard.reset();
+guard.claim(valid);
+
 const states = [];
-const unconfigured = createLeaderboardService({ onStatus:state => states.push(state.value) });
+const unconfigured = createLeaderboardService({
+  onStatus:state => states.push(state.value),
+  configured:false
+});
 const result = await unconfigured.init();
 assert.equal(result.online, false);
 assert.equal(result.reason, "unconfigured");
