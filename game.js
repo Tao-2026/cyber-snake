@@ -74,6 +74,7 @@ let cores = 0;
 let highScore = loadHighScore();
 let status = "ready";
 let timer = null;
+let scoreBurstTimer = null;
 let touchStart = null;
 let language = loadLanguage();
 let scores = loadLeaderboard();
@@ -318,6 +319,7 @@ function showOverlay(kicker, title, body, button, focus = true) {
 
 function clearTimer() { if (timer !== null) { clearTimeout(timer); timer = null; } }
 function showScoreBurst(earned, multiplier, position) {
+  if (scoreBurstTimer !== null) clearTimeout(scoreBurstTimer);
   const tier = multiplier >= 3 || earned >= 400 ? "ultra" : multiplier >= 2 || earned >= 250 ? "fast" : "normal";
   burstPoints.textContent = `+${earned}`;
   burstTier.textContent = text(tier === "ultra" ? "tierUltra" : tier === "fast" ? "tierFast" : "tierNormal");
@@ -340,6 +342,13 @@ function showScoreBurst(earned, multiplier, position) {
   void scoreBurst.offsetWidth;
   scoreBurst.classList.add("show");
   if (tier !== "normal") canvasFrame.classList.add(tier === "ultra" ? "fx-ultra" : "fx-fast");
+  scoreBurstTimer = window.setTimeout(() => {
+    scoreBurst.className = "score-burst";
+    scoreFxLayer.className = "score-fx-layer";
+    canvasFrame.classList.remove("fx-fast", "fx-ultra");
+    scoreFxLayer.querySelectorAll(".fx-particle").forEach(particle => particle.remove());
+    scoreBurstTimer = null;
+  }, 1200);
 }
 function announce(message) { liveStatus.textContent = message; }
 function updateState(value) { stateEl.textContent = value; }
