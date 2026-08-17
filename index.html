@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#070912">
   <meta name="description" content="Cyber Snake — a cyberpunk arcade game with keyboard and touch controls.">
   <title>Cyber Snake // Neon Protocol</title>
-  <link rel="stylesheet" href="styles.css?v=003">
+  <link rel="stylesheet" href="styles.css?v=004">
 </head>
 <body>
   <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -44,6 +44,7 @@
       <section class="arena-wrap">
         <div class="corner corner-a" aria-hidden="true"></div>
         <div class="corner corner-b" aria-hidden="true"></div>
+        <div class="live-score-ribbon" aria-live="polite"><span id="liveScoreLabel">LIVE SCORE</span><strong id="liveScore">0000</strong></div>
         <div id="scoreBurst" class="score-burst" aria-hidden="true"><strong id="burstPoints"></strong><small id="burstTier"></small></div>
         <div class="canvas-frame" id="canvasFrame">
           <canvas id="gameCanvas" width="600" height="600" tabindex="0" aria-label="贪吃蛇游戏区域。按开始游戏，然后使用方向键或 WASD 控制。"></canvas>
@@ -87,6 +88,6 @@
 
     <footer><span>ARROWS / WASD / SWIPE</span><span>SPACE TO PAUSE</span><span>LOCAL HIGH SCORE ENABLED</span></footer>
   </main>
-  <script src="game.js?v=003" defer></script>
+  <script src="game.js?v=004" defer></script>
 </body>
 </html>
