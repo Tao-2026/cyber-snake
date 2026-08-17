@@ -81,8 +81,8 @@ let lastFoodAt = 0;
 let pausedAt = 0;
 
 function loadLanguage() {
-  try { return localStorage.getItem(LANGUAGE_KEY) === "en" ? "en" : "zh"; }
-  catch { return "zh"; }
+  try { return localStorage.getItem(LANGUAGE_KEY) === "zh" ? "zh" : "en"; }
+  catch { return "en"; }
 }
 
 function loadLeaderboard() {
