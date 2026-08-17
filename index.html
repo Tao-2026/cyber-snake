@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#070912">
   <meta name="description" content="Cyber Snake — a cyberpunk arcade game with keyboard and touch controls.">
   <title>Cyber Snake // Neon Protocol</title>
-  <link rel="stylesheet" href="styles.css?v=006">
+  <link rel="stylesheet" href="styles.css?v=007">
 </head>
 <body>
   <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -14,7 +14,7 @@
     <header class="masthead">
       <div>
         <p class="eyebrow">ARCADE SYSTEM // 001</p>
-        <h1>CYBER <em>SNAKE</em></h1>
+        <h1><span id="brandPrimary">CYBER</span> <em id="brandAccent">SNAKE</em></h1>
       </div>
       <div class="header-tools">
         <button id="languageToggle" class="language-toggle" type="button" aria-label="切换到中文">中</button>
@@ -65,7 +65,7 @@
         </div>
         <p id="liveStatus" class="sr-only" aria-live="polite">游戏待开始</p>
         <nav class="touch-controls" aria-label="触屏方向控制">
-          <span class="touch-controls-label">TOUCH CONTROLS / 触屏方向</span>
+          <span class="touch-controls-label">TOUCH CONTROLS</span>
           <button type="button" data-direction="up" aria-label="向上">▲</button>
           <button id="mobilePauseBtn" class="mobile-pause-btn" type="button" data-icon="⏸" disabled>暂停</button>
           <button type="button" data-direction="left" aria-label="向左">◀</button>
@@ -89,6 +89,6 @@
 
     <footer><span>ARROWS / WASD / SWIPE</span><span>SPACE TO PAUSE</span><span>LOCAL HIGH SCORE ENABLED</span></footer>
   </main>
-  <script src="game.js?v=006" defer></script>
+  <script src="game.js?v=007" defer></script>
 </body>
 </html>
