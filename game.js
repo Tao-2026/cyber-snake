@@ -1,3 +1,5 @@
+import { compareLeaderboardEntries, createLeaderboardService } from "./leaderboard-service.js";
+
 "use strict";
 
 const GRID = 24;
@@ -6,6 +8,8 @@ const MIN_DELAY = 62;
 const STORAGE_KEY = "cyberSnake.competitiveHighScore.v2";
 const LANGUAGE_KEY = "cyberSnake.language";
 const LEADERBOARD_KEY = "cyberSnake.emojiPodium.v2";
+const PENDING_SCORE_KEY = "cyberSnake.pendingGlobalScore.v1";
+const GAME_VERSION = "v008";
 const EMOJI_POOL = ["🤖","👾","👽","🦾","🥷","🧙","🦹","🦸","🐲","🦊","🐼","🐸","🐵","🦄","🦖","🐙","🦈","🔥","⚡","💀","😎","🤩","🥳","😈"];
 
 const canvas = document.querySelector("#gameCanvas");
@@ -39,6 +43,8 @@ const moveHint = document.querySelector("#moveHint");
 const pauseHint = document.querySelector("#pauseHint");
 const podium = document.querySelector("#podium");
 const leaderboard = document.querySelector(".leaderboard");
+const leaderboardStatus = document.querySelector("#leaderboardStatus");
+const leaderboardTitle = document.querySelector(".leaderboard-title");
 const emojiForm = document.querySelector("#emojiForm");
 const emojiLabel = document.querySelector("#emojiLabel");
 const emojiHint = document.querySelector("#emojiHint");
@@ -56,7 +62,7 @@ const copy = {
     canvasLabel:"贪吃蛇游戏区域。按开始游戏，然后使用方向键或 WASD 控制。", gameLabel:"Cyber Snake 游戏", statsLabel:"游戏数据", controlsLabel:"操作说明", touchLabel:"触屏方向控制", touchHeading:"触屏方向", directions:["向上","向左","向下","向右"],
     running:"RUNNING", paused:"PAUSED", terminated:"RUN TERMINATED", startAnnounce:"游戏开始", pausedAnnounce:"游戏已暂停", resumeAnnounce:"游戏继续", readyAnnounce:"游戏待开始",
     coresLabel:"总豆数", currentScoreLabel:"当前竞技分", liveScoreLabel:"当前分数", speedLabel:"速度", scoreAnnounce:(earned,value,multiplier)=>`获得 ${earned} 分，倍率 ${multiplier}，当前竞技分 ${value}`, tierNormal:"核心吸收", tierFast:"快速连击 ×2", tierUltra:"极速爆分 ×3", pauseTitle:"已暂停", pauseText:"按空格或点击继续返回网络。", resumeGame:"继续游戏", overTitle:"游戏结束", retry:"重新挑战",
-    overText:(value,best,cores)=>`吞噬 ${cores} 颗豆。最终竞技分 ${value}，最高 ${best}。`, overAnnounce:(value,cores)=>`游戏结束，共 ${cores} 颗豆，最终竞技分 ${value}`, leaderboardLabel:"Top 3 Emoji 领奖台", qualifiedTitle:"破榜成功", qualifiedText:(value,cores)=>`${cores} 颗豆转化为 ${value} 分，进入 TOP 3。`, emojiLabel:"随机选择你的领奖台角色", emojiHint:"不满意可以继续随机", randomEmoji:"🎲 随机 Emoji", save:"确认登台", skip:"跳过 / 重试", savedTitle:"登台成功", savedText:emoji=>`${emoji} 已登上荣誉领奖台。`, clear:"清空", clearConfirm:"确定清空 TOP 3 领奖台吗？", rankLabel:(rank,emoji,value)=>`第 ${rank} 名，${emoji}，${value} 分`, emptyRank:rank=>`第 ${rank} 名空缺`
+    overText:(value,best,cores)=>`吞噬 ${cores} 颗豆。最终竞技分 ${value}，最高 ${best}。`, overAnnounce:(value,cores)=>`游戏结束，共 ${cores} 颗豆，最终竞技分 ${value}`, leaderboardLabel:"全球 Top 3 Emoji 领奖台", leaderboardTitle:"TOP 3 // 全球荣誉榜", qualifiedTitle:"破榜成功", qualifiedText:(value,cores)=>`${cores} 颗豆转化为 ${value} 分，进入 TOP 3。`, emojiLabel:"随机选择你的领奖台角色", emojiHint:"不满意可以继续随机", randomEmoji:"🎲 随机 Emoji", save:"确认登台", skip:"跳过 / 重试", savedTitle:"登台成功", savedText:emoji=>`${emoji} 已登上荣誉领奖台。`, clear:"清除本地", clearConfirm:"确定清除本地 TOP 3 和最高分吗？", rankLabel:(rank,emoji,value,own)=>`第 ${rank} 名，${emoji}，${value} 分${own ? "，本机最佳" : ""}`, emptyRank:rank=>`第 ${rank} 名空缺`, connecting:"正在连接排行榜", synced:"在线排行榜已同步", offline:"离线模式：显示本地排行榜", uploadSuccess:"成绩上传成功", uploadFailed:"成绩上传失败，可稍后重试", ownBest:"本机最佳"
   },
   en: {
     switchLabel:"切换到中文", toggle:"中", brandPrimary:"CYBER", brandAccent:"SNAKE", readyKicker:"NEURAL LINK READY", readyTitle:"CYBER SNAKE", readyText:"Enter the neon grid and collect data cores.", start:"Start game",
@@ -64,7 +70,7 @@ const copy = {
     canvasLabel:"Snake game area. Start the game, then use arrow keys or WASD to steer.", gameLabel:"Cyber Snake game", statsLabel:"Game statistics", controlsLabel:"Instructions", touchLabel:"Touch direction controls", touchHeading:"TOUCH CONTROLS", directions:["Up","Left","Down","Right"],
     running:"RUNNING", paused:"PAUSED", terminated:"RUN TERMINATED", startAnnounce:"Game started", pausedAnnounce:"Game paused", resumeAnnounce:"Game resumed", readyAnnounce:"Game ready",
     coresLabel:"TOTAL CORES", currentScoreLabel:"CURRENT SCORE", liveScoreLabel:"LIVE SCORE", speedLabel:"SPEED", scoreAnnounce:(earned,value,multiplier)=>`Scored ${earned} at ×${multiplier}. Competitive score ${value}.`, tierNormal:"CORE ABSORBED", tierFast:"FAST COMBO ×2", tierUltra:"ULTRA SCORE ×3", pauseTitle:"PAUSED", pauseText:"Press Space or Resume to return to the grid.", resumeGame:"Resume game", overTitle:"GAME OVER", retry:"Try again",
-    overText:(value,best,cores)=>`${cores} ${cores===1?"core":"cores"} consumed. Final score ${value}; best ${best}.`, overAnnounce:(value,cores)=>`Game over. ${cores} ${cores===1?"core":"cores"} and ${value} competitive points.`, leaderboardLabel:"Top 3 emoji podium", qualifiedTitle:"NEW HIGH SCORE", qualifiedText:(value,cores)=>`${cores} ${cores===1?"core":"cores"} converted into ${value} points and a TOP 3 finish.`, emojiLabel:"Randomize your podium character", emojiHint:"Keep rolling until you find your champion", randomEmoji:"🎲 Random Emoji", save:"Claim podium", skip:"Skip / retry", savedTitle:"PODIUM CLAIMED", savedText:emoji=>`${emoji} entered the Hall of Fame.`, clear:"Clear", clearConfirm:"Clear the TOP 3 podium?", rankLabel:(rank,emoji,value)=>`Rank ${rank}, ${emoji}, ${value} points`, emptyRank:rank=>`Rank ${rank} empty`
+    overText:(value,best,cores)=>`${cores} ${cores===1?"core":"cores"} consumed. Final score ${value}; best ${best}.`, overAnnounce:(value,cores)=>`Game over. ${cores} ${cores===1?"core":"cores"} and ${value} competitive points.`, leaderboardLabel:"Global Top 3 emoji podium", leaderboardTitle:"TOP 3 // GLOBAL HALL OF FAME", qualifiedTitle:"NEW HIGH SCORE", qualifiedText:(value,cores)=>`${cores} ${cores===1?"core":"cores"} converted into ${value} points and a TOP 3 finish.`, emojiLabel:"Randomize your podium character", emojiHint:"Keep rolling until you find your champion", randomEmoji:"🎲 Random Emoji", save:"Claim podium", skip:"Skip / retry", savedTitle:"PODIUM CLAIMED", savedText:emoji=>`${emoji} entered the Hall of Fame.`, clear:"Clear local", clearConfirm:"Clear the local TOP 3 and high score?", rankLabel:(rank,emoji,value,own)=>`Rank ${rank}, ${emoji}, ${value} points${own ? ", this device best" : ""}`, emptyRank:rank=>`Rank ${rank} empty`, connecting:"Connecting to leaderboard", synced:"Online leaderboard synced", offline:"Offline mode: showing local leaderboard", uploadSuccess:"Score uploaded", uploadFailed:"Score upload failed; retrying later", ownBest:"YOUR BEST"
   }
 };
 
@@ -80,11 +86,31 @@ let timer = null;
 let scoreBurstTimer = null;
 let touchStart = null;
 let language = loadLanguage();
-let scores = loadLeaderboard();
+let localScores = loadLeaderboard();
+let scores = [...localScores];
 let awaitingEmoji = false;
 let selectedEmoji = null;
 let lastFoodAt = 0;
 let pausedAt = 0;
+let runStartedAt = 0;
+let pausedDuration = 0;
+let maxLength = 4;
+let finalRun = null;
+let onlinePlayerId = null;
+let leaderboardMode = "connecting";
+let lastLeaderboardStatus = "connecting";
+
+const leaderboardService = createLeaderboardService({
+  onStatus:({ value }) => {
+    lastLeaderboardStatus = value;
+    if (value === "offline") {
+      leaderboardMode = "offline";
+      scores = [...localScores];
+      renderLeaderboard();
+    }
+    renderLeaderboardStatus();
+  }
+});
 
 function loadLanguage() {
   try { return localStorage.getItem(LANGUAGE_KEY) === "zh" ? "zh" : "en"; }
@@ -95,17 +121,78 @@ function loadLeaderboard() {
   try {
     const value = JSON.parse(localStorage.getItem(LEADERBOARD_KEY) || "[]");
     if (!Array.isArray(value)) return [];
-    return value.filter(entry => entry && Number.isFinite(entry.score)).slice(0, 3).map((entry, index) => ({ emoji:typeof entry.emoji === "string" ? entry.emoji : EMOJI_POOL[index], score:entry.score }));
+    return value
+      .filter(entry => entry && Number.isFinite(entry.score))
+      .map((entry, index) => ({
+        playerId:null,
+        emoji:typeof entry.emoji === "string" ? entry.emoji : EMOJI_POOL[index],
+        score:Math.max(0, Math.trunc(entry.score)),
+        cores:Math.max(0, Math.trunc(entry.cores || 0)),
+        createdAt:Number.isFinite(entry.createdAt) ? entry.createdAt : index
+      }))
+      .sort(compareLeaderboardEntries)
+      .slice(0, 3);
   } catch { return []; }
 }
 
 function saveLeaderboard() {
-  try { localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(scores)); } catch { /* Storage may be disabled. */ }
+  try { localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(localScores)); } catch { /* Storage may be disabled. */ }
+}
+
+function loadPendingScore() {
+  try { return JSON.parse(localStorage.getItem(PENDING_SCORE_KEY) || "null"); }
+  catch { return null; }
+}
+
+function savePendingScore(entry) {
+  try {
+    if (entry) localStorage.setItem(PENDING_SCORE_KEY, JSON.stringify(entry));
+    else localStorage.removeItem(PENDING_SCORE_KEY);
+  } catch { /* Storage may be disabled. */ }
 }
 
 function text(key, ...args) {
   const value = copy[language][key];
   return typeof value === "function" ? value(...args) : value;
+}
+
+function renderLeaderboardStatus() {
+  leaderboardStatus.textContent = text(lastLeaderboardStatus);
+  leaderboardStatus.dataset.state = lastLeaderboardStatus;
+}
+
+async function initializeLeaderboard() {
+  const result = await leaderboardService.init();
+  if (!result.online) {
+    leaderboardMode = "offline";
+    scores = [...localScores];
+    lastLeaderboardStatus = "offline";
+    renderLeaderboard();
+    renderLeaderboardStatus();
+    return;
+  }
+  leaderboardMode = "online";
+  onlinePlayerId = result.playerId;
+  scores = result.scores;
+  lastLeaderboardStatus = "synced";
+  renderLeaderboard();
+  renderLeaderboardStatus();
+  await retryPendingScore();
+}
+
+async function retryPendingScore() {
+  const pending = loadPendingScore();
+  if (!pending || leaderboardMode !== "online") return;
+  try {
+    const result = await leaderboardService.submitScore(pending);
+    savePendingScore(null);
+    scores = result.scores;
+    lastLeaderboardStatus = "uploadSuccess";
+    renderLeaderboard();
+  } catch {
+    lastLeaderboardStatus = "uploadFailed";
+  }
+  renderLeaderboardStatus();
 }
 
 function updateActionButtons() {
@@ -137,6 +224,8 @@ function applyLanguage() {
   document.querySelector(".touch-controls").setAttribute("aria-label", text("touchLabel"));
   document.querySelector(".touch-controls-label").textContent = text("touchHeading");
   leaderboard.setAttribute("aria-label", text("leaderboardLabel"));
+  leaderboardTitle.textContent = text("leaderboardTitle");
+  renderLeaderboardStatus();
   emojiLabel.textContent = text("emojiLabel"); emojiHint.textContent = text("emojiHint"); randomEmojiBtn.textContent = text("randomEmoji"); saveScoreBtn.textContent = text("save");
   clearScoresBtn.textContent = text("clear");
   document.querySelectorAll("[data-direction]").forEach((button, index) => button.setAttribute("aria-label", text("directions")[index]));
@@ -175,6 +264,11 @@ function resetModel() {
 function startGame() {
   clearTimer();
   resetModel();
+  runStartedAt = performance.now();
+  pausedDuration = 0;
+  pausedAt = 0;
+  maxLength = snake.length;
+  finalRun = null;
   status = "running";
   awaitingEmoji = false;
   selectedEmoji = null;
@@ -211,6 +305,7 @@ function tick() {
     const multiplier = interval <= 2000 ? 3 : interval <= 4000 ? 2 : interval <= 6000 ? 1.5 : 1;
     const earned = Math.round(snake.length * 10 * multiplier);
     score += earned;
+    maxLength = Math.max(maxLength, snake.length);
     lastFoodAt = now;
     if (score > highScore) { highScore = score; saveHighScore(); }
     placeFood();
@@ -247,7 +342,11 @@ function togglePause() {
     announce(text("pausedAnnounce"));
   } else if (status === "paused") {
     status = "running";
-    if (pausedAt) lastFoodAt += performance.now() - pausedAt;
+    if (pausedAt) {
+      const pauseLength = performance.now() - pausedAt;
+      lastFoodAt += pauseLength;
+      pausedDuration += pauseLength;
+    }
     pausedAt = 0;
     overlay.classList.add("hidden");
     updateActionButtons();
@@ -263,7 +362,14 @@ function endGame() {
   clearTimer();
   pauseBtn.disabled = true;
   mobilePauseBtn.disabled = true;
-  awaitingEmoji = qualifiesForLeaderboard(score);
+  finalRun = {
+    score,
+    cores,
+    runDuration:Math.max(0, Math.round(performance.now() - runStartedAt - pausedDuration)),
+    maxLength,
+    gameVersion:GAME_VERSION
+  };
+  awaitingEmoji = qualifiesForLeaderboard(finalRun);
   if (awaitingEmoji) {
     showOverlay("HALL OF FAME", text("qualifiedTitle"), text("qualifiedText", score, cores), text("skip"), false);
     selectedEmoji = null;
@@ -276,8 +382,10 @@ function endGame() {
   announce(text("overAnnounce", score, cores));
 }
 
-function qualifiesForLeaderboard(value) {
-  return value > 0 && (scores.length < 3 || value > scores[scores.length - 1].score);
+function qualifiesForLeaderboard(entry) {
+  if (!entry || entry.score <= 0) return false;
+  if (scores.length < 3) return true;
+  return compareLeaderboardEntries(entry, scores[scores.length - 1]) < 0;
 }
 
 function renderLeaderboard() {
@@ -286,26 +394,48 @@ function renderLeaderboard() {
     const place = podium.querySelector(`[data-rank="${rank}"]`);
     const avatar = place.querySelector(".podium-emoji");
     const value = place.querySelector("strong");
+    const own = Boolean(entry && onlinePlayerId && entry.playerId === onlinePlayerId);
     avatar.textContent = entry ? entry.emoji : "❔";
     value.textContent = entry ? formatScore(entry.score) : "----";
-    place.setAttribute("aria-label", entry ? text("rankLabel", rank, entry.emoji, entry.score) : text("emptyRank", rank));
+    place.setAttribute("aria-label", entry ? text("rankLabel", rank, entry.emoji, entry.score, own) : text("emptyRank", rank));
+    place.classList.toggle("own-score", own);
+    place.dataset.ownLabel = own ? text("ownBest") : "";
     place.classList.remove("entering");
     if (entry) requestAnimationFrame(() => place.classList.add("entering"));
   });
-  clearScoresBtn.disabled = scores.length === 0 && highScore === 0;
+  clearScoresBtn.disabled = localScores.length === 0 && highScore === 0;
 }
 
-function recordScore() {
+async function recordScore() {
   if (!selectedEmoji) { randomEmojiBtn.focus(); return; }
-  scores.push({ emoji:selectedEmoji, score });
-  scores.sort((a, b) => b.score - a.score);
-  scores = scores.slice(0, 3);
+  const localEntry = { emoji:selectedEmoji, score, cores, createdAt:Date.now(), playerId:null };
+  localScores.push(localEntry);
+  localScores.sort(compareLeaderboardEntries);
+  localScores = localScores.slice(0, 3);
   saveLeaderboard();
+  if (leaderboardMode !== "online") scores = [...localScores];
   awaitingEmoji = false;
   emojiForm.classList.add("hidden");
   renderLeaderboard();
   showOverlay("HALL OF FAME", text("savedTitle"), text("savedText", selectedEmoji), text("retry"));
   announce(text("savedText", selectedEmoji));
+
+  if (leaderboardMode !== "online" || !finalRun) return;
+  const globalEntry = { ...finalRun, emoji:selectedEmoji };
+  savePendingScore(globalEntry);
+  try {
+    const result = await leaderboardService.submitScore(globalEntry);
+    scores = result.scores;
+    onlinePlayerId = result.playerId;
+    savePendingScore(null);
+    lastLeaderboardStatus = "uploadSuccess";
+    renderLeaderboard();
+    announce(text("uploadSuccess"));
+  } catch {
+    lastLeaderboardStatus = "uploadFailed";
+    announce(text("uploadFailed"));
+  }
+  renderLeaderboardStatus();
 }
 
 function rollEmoji() {
@@ -403,7 +533,8 @@ restartBtn.addEventListener("click", startGame);
 emojiForm.addEventListener("submit", event => { event.preventDefault(); recordScore(); });
 randomEmojiBtn.addEventListener("click", rollEmoji);
 clearScoresBtn.addEventListener("click", () => {
-  scores = [];
+  localScores = [];
+  if (leaderboardMode !== "online") scores = [];
   highScore = 0;
   saveLeaderboard();
   saveHighScore();
@@ -431,3 +562,4 @@ document.addEventListener("visibilitychange", () => { if (document.hidden && sta
 
 resetModel();
 applyLanguage();
+void initializeLeaderboard();

@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#070912">
   <meta name="description" content="Cyber Snake — a cyberpunk arcade game with keyboard and touch controls.">
   <title>Cyber Snake // Neon Protocol</title>
-  <link rel="stylesheet" href="styles.css?v=007">
+  <link rel="stylesheet" href="styles.css?v=008">
 </head>
 <body>
   <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -30,7 +30,8 @@
         <div class="stat"><span id="speedLabel">SPEED</span><strong id="speed">01</strong></div>
         <div class="divider"></div>
         <div class="leaderboard" aria-label="Top 3 排行榜">
-          <div class="leaderboard-heading"><p class="leaderboard-title">TOP 3 // HALL OF FAME</p><button id="clearScoresBtn" type="button">清空</button></div>
+          <div class="leaderboard-heading"><p class="leaderboard-title">TOP 3 // GLOBAL HALL OF FAME</p><button id="clearScoresBtn" type="button">CLEAR LOCAL</button></div>
+          <p id="leaderboardStatus" class="leaderboard-status" role="status">CONNECTING TO LEADERBOARD</p>
           <div id="podium" class="podium" aria-live="polite">
             <article class="podium-place place-2" data-rank="2"><span class="podium-emoji" aria-hidden="true">❔</span><div class="podium-block"><b>#2</b><strong>----</strong></div></article>
             <article class="podium-place place-1" data-rank="1"><span class="podium-emoji" aria-hidden="true">❔</span><div class="podium-block"><b>#1</b><strong>----</strong></div></article>
@@ -87,8 +88,8 @@
       </aside>
     </section>
 
-    <footer><span>ARROWS / WASD / SWIPE</span><span>SPACE TO PAUSE</span><span>LOCAL HIGH SCORE ENABLED</span></footer>
+    <footer><span>ARROWS / WASD / SWIPE</span><span>SPACE TO PAUSE</span><span>GLOBAL TOP 3 + OFFLINE FALLBACK</span></footer>
   </main>
-  <script src="game.js?v=007" defer></script>
+  <script type="module" src="game.js?v=008"></script>
 </body>
 </html>

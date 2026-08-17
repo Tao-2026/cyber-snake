@@ -1,0 +1,66 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owns(playerId) {
+      return signedIn() && request.auth.uid == playerId;
+    }
+
+    function validScore(playerId) {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          'playerId', 'emoji', 'score', 'cores', 'createdAt',
+          'gameVersion', 'runDuration', 'maxLength'
+        ])
+        && data.playerId == playerId
+        && data.playerId is string
+        && data.emoji is string
+        && data.emoji.size() >= 1
+        && data.emoji.size() <= 16
+        && data.score is int
+        && data.score > 0
+        && data.score <= 10000000
+        && data.cores is int
+        && data.cores > 0
+        && data.cores <= 600
+        && data.createdAt is timestamp
+        && data.createdAt == request.time
+        && data.gameVersion is string
+        && data.gameVersion.matches('^v[0-9]{3}$')
+        && data.runDuration is int
+        && data.runDuration >= 0
+        && data.runDuration <= 86400000
+        && data.maxLength is int
+        && data.maxLength >= 4
+        && data.maxLength <= 576;
+    }
+
+    match /leaderboard/{playerId} {
+      allow get: if signedIn();
+      allow list: if signedIn()
+        && request.query.limit != null
+        && request.query.limit <= 3;
+      allow create: if owns(playerId) && validScore(playerId);
+      allow update: if owns(playerId)
+        && validScore(playerId)
+        && request.resource.data.playerId == resource.data.playerId
+        && request.time > resource.data.createdAt + duration.value(10, 's')
+        && (
+          request.resource.data.score > resource.data.score
+          || (
+            request.resource.data.score == resource.data.score
+            && request.resource.data.cores > resource.data.cores
+          )
+        );
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
