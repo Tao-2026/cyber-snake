@@ -1,4 +1,5 @@
 import { compareLeaderboardEntries, createLeaderboardService } from "./leaderboard-service.js";
+import { APP_VERSION, getVersionPresentation } from "./version.js";
 
 "use strict";
 
@@ -9,7 +10,7 @@ const STORAGE_KEY = "cyberSnake.competitiveHighScore.v2";
 const LANGUAGE_KEY = "cyberSnake.language";
 const LEADERBOARD_KEY = "cyberSnake.emojiPodium.v2";
 const PENDING_SCORE_KEY = "cyberSnake.pendingGlobalScore.v1";
-const GAME_VERSION = "v008";
+const GAME_VERSION = APP_VERSION;
 const EMOJI_POOL = ["🤖","👾","👽","🦾","🥷","🧙","🦹","🦸","🐲","🦊","🐼","🐸","🐵","🦄","🦖","🐙","🦈","🔥","⚡","💀","😎","🤩","🥳","😈"];
 
 const canvas = document.querySelector("#gameCanvas");
@@ -54,6 +55,10 @@ const saveScoreBtn = document.querySelector("#saveScoreBtn");
 const clearScoresBtn = document.querySelector("#clearScoresBtn");
 const brandPrimary = document.querySelector("#brandPrimary");
 const brandAccent = document.querySelector("#brandAccent");
+const appVersion = document.querySelector("#appVersion");
+const releaseChannel = document.querySelector("#releaseChannel");
+const releaseCodename = document.querySelector("#releaseCodename");
+const updatesLink = document.querySelector("#updatesLink");
 
 const copy = {
   zh: {
@@ -210,6 +215,15 @@ function updateActionButtons() {
 
 function applyLanguage() {
   document.documentElement.lang = language === "zh" ? "zh-CN" : "en";
+  const versionPresentation = getVersionPresentation(language);
+  document.title = versionPresentation.title;
+  appVersion.textContent = versionPresentation.version;
+  releaseChannel.textContent = versionPresentation.channel;
+  releaseCodename.textContent = versionPresentation.codename;
+  updatesLink.textContent = versionPresentation.updates;
+  updatesLink.href = versionPresentation.url;
+  updatesLink.setAttribute("aria-label", versionPresentation.updatesLabel);
+  document.querySelector(".version-line").setAttribute("aria-label", versionPresentation.updatesLabel);
   languageToggle.textContent = text("toggle");
   languageToggle.setAttribute("aria-label", text("switchLabel"));
   brandPrimary.textContent = text("brandPrimary");
