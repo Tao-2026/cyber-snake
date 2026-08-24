@@ -1,7 +1,7 @@
 export const APP_VERSION = "0.9.0-beta.1";
 export const RELEASE_CHANNEL = "beta";
 export const RELEASE_CODENAME = "GLOBAL GRID";
-export const RELEASE_DATE = null;
+export const RELEASE_DATE = "2026-08-24";
 export const RELEASE_COMMIT = null;
 
 export const RELEASE_URL =
@@ -10,7 +10,7 @@ export const RELEASE_URL =
 export const CHANGELOG_URL =
   "https://github.com/Tao-2026/cyber-snake/blob/main/CHANGELOG.md";
 
-export const UPDATE_URL = RELEASE_DATE && RELEASE_COMMIT
+export const UPDATE_URL = RELEASE_DATE
   ? RELEASE_URL
   : CHANGELOG_URL;
 

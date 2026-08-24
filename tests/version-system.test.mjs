@@ -4,6 +4,7 @@ import {
   APP_VERSION,
   CHANGELOG_URL,
   RELEASE_CHANNEL,
+  RELEASE_DATE,
   RELEASE_URL,
   UPDATE_URL,
   getVersionPresentation
@@ -27,7 +28,8 @@ assert.equal(en.updates, "View updates");
 assert.equal(zh.channel, "测试版");
 assert.equal(zh.codename, "全球竞技场");
 assert.equal(zh.updates, "查看更新");
-assert.equal(UPDATE_URL, CHANGELOG_URL);
+assert.equal(RELEASE_DATE, "2026-08-24");
+assert.equal(UPDATE_URL, RELEASE_URL);
 assert.ok(RELEASE_URL.endsWith(`/tag/v${APP_VERSION}`));
 assert.ok(changelog.includes("## [Unreleased]"));
 assert.ok(changelog.includes(`\`${APP_VERSION}\``));

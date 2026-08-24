@@ -6,6 +6,7 @@ import {
   APP_VERSION,
   CHANGELOG_URL,
   RELEASE_CHANNEL,
+  RELEASE_DATE,
   RELEASE_URL,
   UPDATE_URL,
   getVersionPresentation
@@ -33,9 +34,9 @@ check("CHANGELOG contains Unreleased and current prerelease", () => {
   assert.ok(changelog.includes(`\`${APP_VERSION}\``));
 });
 check("Release URL tag matches current version", () => assert.ok(RELEASE_URL.endsWith(`/tag/${releaseTag}`)));
-check("CHANGELOG fallback URL is correct", () => {
+check("product update URL matches release state", () => {
   assert.equal(CHANGELOG_URL, "https://github.com/Tao-2026/cyber-snake/blob/main/CHANGELOG.md");
-  assert.equal(UPDATE_URL, CHANGELOG_URL);
+  assert.equal(UPDATE_URL, RELEASE_DATE ? RELEASE_URL : CHANGELOG_URL);
 });
 check("UI imports the single version source", () => {
   assert.match(gameSource, /from "\.\/version\.js"/);
