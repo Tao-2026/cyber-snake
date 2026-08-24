@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#070912">
   <meta name="description" content="Cyber Snake — a cyberpunk arcade game with keyboard and touch controls.">
-  <title>Cyber Snake // Neon Protocol</title>
-  <link rel="stylesheet" href="styles.css?v=008">
+  <title>Cyber Snake</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -15,6 +15,15 @@
       <div>
         <p class="eyebrow">ARCADE SYSTEM // 001</p>
         <h1><span id="brandPrimary">CYBER</span> <em id="brandAccent">SNAKE</em></h1>
+        <p class="version-line" aria-label="Cyber Snake release information">
+          <span id="appVersion" class="version-badge"></span>
+          <span aria-hidden="true">·</span>
+          <strong id="releaseChannel"></strong>
+          <span aria-hidden="true">·</span>
+          <span id="releaseCodename"></span>
+          <span aria-hidden="true">·</span>
+          <a id="updatesLink" href="CHANGELOG.md" target="_blank" rel="noopener noreferrer">View updates</a>
+        </p>
       </div>
       <div class="header-tools">
         <button id="languageToggle" class="language-toggle" type="button" aria-label="切换到中文">中</button>
@@ -90,6 +99,6 @@
 
     <footer><span>ARROWS / WASD / SWIPE</span><span>SPACE TO PAUSE</span><span>GLOBAL TOP 3 + OFFLINE FALLBACK</span></footer>
   </main>
-  <script type="module" src="game.js?v=008"></script>
+  <script type="module" src="game.js"></script>
 </body>
 </html>
