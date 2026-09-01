@@ -39,7 +39,7 @@ h1 em { color:var(--cyan); font-style:normal; }
 .leaderboard-status { min-height:1.1em; margin:-4px 0 5px; color:var(--muted); font-size:.55rem; line-height:1.2; letter-spacing:.06em; }
 .leaderboard-status[data-state="connecting"] { color:var(--cyan); }
 .leaderboard-status[data-state="synced"],.leaderboard-status[data-state="uploadSuccess"] { color:var(--green); }
-.leaderboard-status[data-state="offline"],.leaderboard-status[data-state="uploadFailed"] { color:#ffc857; }
+.leaderboard-status[data-state="offline"],.leaderboard-status[data-state^="upload"] { color:#ffc857; }
 .podium { height:150px; display:flex; align-items:flex-end; justify-content:center; gap:3px; perspective:420px; overflow:visible; }
 .podium-place { position:relative; width:32%; display:flex; flex-direction:column; align-items:center; transform-style:preserve-3d; }
 .podium-place.own-score::after { content:attr(data-own-label); position:absolute; z-index:4; top:-14px; padding:1px 3px; color:#071013; background:var(--green); box-shadow:0 0 9px rgba(125,255,106,.55); font-size:.46rem; line-height:1.2; white-space:nowrap; }

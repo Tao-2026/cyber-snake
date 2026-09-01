@@ -70,7 +70,7 @@ Fields:
 - `score` — competitive score and primary rank key
 - `cores` — total cores and first tie-breaker
 - `createdAt` — Firestore server timestamp and final tie-breaker (earlier wins)
-- `gameVersion` — release string such as `v008`
+- `gameVersion` — legacy `v001`–`v008` or strict Semantic Version such as `0.9.1-beta.1`
 - `runDuration` — active run duration in milliseconds
 - `maxLength` — maximum snake length
 

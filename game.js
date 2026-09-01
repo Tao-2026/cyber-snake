@@ -1,4 +1,4 @@
-import { compareLeaderboardEntries, createLeaderboardService } from "./leaderboard-service.js";
+import { classifyLeaderboardError, compareLeaderboardEntries, createLeaderboardService, shouldRetryLeaderboardSubmission } from "./leaderboard-service.js";
 import { APP_VERSION, getVersionPresentation } from "./version.js";
 
 "use strict";
@@ -67,7 +67,7 @@ const copy = {
     canvasLabel:"贪吃蛇游戏区域。按开始游戏，然后使用方向键或 WASD 控制。", gameLabel:"Cyber Snake 游戏", statsLabel:"游戏数据", controlsLabel:"操作说明", touchLabel:"触屏方向控制", touchHeading:"触屏方向", directions:["向上","向左","向下","向右"],
     running:"RUNNING", paused:"PAUSED", terminated:"RUN TERMINATED", startAnnounce:"游戏开始", pausedAnnounce:"游戏已暂停", resumeAnnounce:"游戏继续", readyAnnounce:"游戏待开始",
     coresLabel:"总豆数", currentScoreLabel:"当前竞技分", liveScoreLabel:"当前分数", speedLabel:"速度", scoreAnnounce:(earned,value,multiplier)=>`获得 ${earned} 分，倍率 ${multiplier}，当前竞技分 ${value}`, tierNormal:"核心吸收", tierFast:"快速连击 ×2", tierUltra:"极速爆分 ×3", pauseTitle:"已暂停", pauseText:"按空格或点击继续返回网络。", resumeGame:"继续游戏", overTitle:"游戏结束", retry:"重新挑战",
-    overText:(value,best,cores)=>`吞噬 ${cores} 颗豆。最终竞技分 ${value}，最高 ${best}。`, overAnnounce:(value,cores)=>`游戏结束，共 ${cores} 颗豆，最终竞技分 ${value}`, leaderboardLabel:"全球 Top 3 Emoji 领奖台", leaderboardTitle:"TOP 3 // 全球荣誉榜", qualifiedTitle:"破榜成功", qualifiedText:(value,cores)=>`${cores} 颗豆转化为 ${value} 分，进入 TOP 3。`, emojiLabel:"随机选择你的领奖台角色", emojiHint:"不满意可以继续随机", randomEmoji:"🎲 随机 Emoji", save:"确认登台", skip:"跳过 / 重试", savedTitle:"登台成功", savedText:emoji=>`${emoji} 已登上荣誉领奖台。`, clear:"清除本地", clearConfirm:"确定清除本地 TOP 3 和最高分吗？", rankLabel:(rank,emoji,value,own)=>`第 ${rank} 名，${emoji}，${value} 分${own ? "，本机最佳" : ""}`, emptyRank:rank=>`第 ${rank} 名空缺`, connecting:"正在连接排行榜", synced:"在线排行榜已同步", offline:"离线模式：显示本地排行榜", uploadSuccess:"成绩上传成功", uploadFailed:"成绩上传失败，可稍后重试", ownBest:"本机最佳"
+    overText:(value,best,cores)=>`吞噬 ${cores} 颗豆。最终竞技分 ${value}，最高 ${best}。`, overAnnounce:(value,cores)=>`游戏结束，共 ${cores} 颗豆，最终竞技分 ${value}`, leaderboardLabel:"全球 Top 3 Emoji 领奖台", leaderboardTitle:"TOP 3 // 全球荣誉榜", qualifiedTitle:"破榜成功", qualifiedText:(value,cores)=>`${cores} 颗豆转化为 ${value} 分，进入 TOP 3。`, emojiLabel:"随机选择你的领奖台角色", emojiHint:"不满意可以继续随机", randomEmoji:"🎲 随机 Emoji", save:"确认登台", skip:"跳过 / 重试", savedTitle:"登台成功", savedText:emoji=>`${emoji} 已登上荣誉领奖台。`, clear:"清除本地", clearConfirm:"确定清除本地 TOP 3 和最高分吗？", rankLabel:(rank,emoji,value,own)=>`第 ${rank} 名，${emoji}，${value} 分${own ? "，本机最佳" : ""}`, emptyRank:rank=>`第 ${rank} 名空缺`, connecting:"正在连接排行榜", synced:"在线排行榜已同步", offline:"离线模式：显示本地排行榜", uploadSuccess:"成绩上传成功", uploadInvalid:"成绩格式无效，未加入重试", uploadAuth:"身份认证失败，将在重新连接后重试", uploadPermission:"排行榜权限拒绝，成绩未加入重试", uploadNetwork:"网络中断，成绩将在稍后重试", uploadThrottled:"提交过于频繁，将稍后重试", uploadFailed:"成绩上传失败，未加入自动重试", ownBest:"本机最佳"
   },
   en: {
     switchLabel:"切换到中文", toggle:"中", brandPrimary:"CYBER", brandAccent:"SNAKE", readyKicker:"NEURAL LINK READY", readyTitle:"CYBER SNAKE", readyText:"Enter the neon grid and collect data cores.", start:"Start game",
@@ -75,7 +75,7 @@ const copy = {
     canvasLabel:"Snake game area. Start the game, then use arrow keys or WASD to steer.", gameLabel:"Cyber Snake game", statsLabel:"Game statistics", controlsLabel:"Instructions", touchLabel:"Touch direction controls", touchHeading:"TOUCH CONTROLS", directions:["Up","Left","Down","Right"],
     running:"RUNNING", paused:"PAUSED", terminated:"RUN TERMINATED", startAnnounce:"Game started", pausedAnnounce:"Game paused", resumeAnnounce:"Game resumed", readyAnnounce:"Game ready",
     coresLabel:"TOTAL CORES", currentScoreLabel:"CURRENT SCORE", liveScoreLabel:"LIVE SCORE", speedLabel:"SPEED", scoreAnnounce:(earned,value,multiplier)=>`Scored ${earned} at ×${multiplier}. Competitive score ${value}.`, tierNormal:"CORE ABSORBED", tierFast:"FAST COMBO ×2", tierUltra:"ULTRA SCORE ×3", pauseTitle:"PAUSED", pauseText:"Press Space or Resume to return to the grid.", resumeGame:"Resume game", overTitle:"GAME OVER", retry:"Try again",
-    overText:(value,best,cores)=>`${cores} ${cores===1?"core":"cores"} consumed. Final score ${value}; best ${best}.`, overAnnounce:(value,cores)=>`Game over. ${cores} ${cores===1?"core":"cores"} and ${value} competitive points.`, leaderboardLabel:"Global Top 3 emoji podium", leaderboardTitle:"TOP 3 // GLOBAL HALL OF FAME", qualifiedTitle:"NEW HIGH SCORE", qualifiedText:(value,cores)=>`${cores} ${cores===1?"core":"cores"} converted into ${value} points and a TOP 3 finish.`, emojiLabel:"Randomize your podium character", emojiHint:"Keep rolling until you find your champion", randomEmoji:"🎲 Random Emoji", save:"Claim podium", skip:"Skip / retry", savedTitle:"PODIUM CLAIMED", savedText:emoji=>`${emoji} entered the Hall of Fame.`, clear:"Clear local", clearConfirm:"Clear the local TOP 3 and high score?", rankLabel:(rank,emoji,value,own)=>`Rank ${rank}, ${emoji}, ${value} points${own ? ", this device best" : ""}`, emptyRank:rank=>`Rank ${rank} empty`, connecting:"Connecting to leaderboard", synced:"Online leaderboard synced", offline:"Offline mode: showing local leaderboard", uploadSuccess:"Score uploaded", uploadFailed:"Score upload failed; retrying later", ownBest:"YOUR BEST"
+    overText:(value,best,cores)=>`${cores} ${cores===1?"core":"cores"} consumed. Final score ${value}; best ${best}.`, overAnnounce:(value,cores)=>`Game over. ${cores} ${cores===1?"core":"cores"} and ${value} competitive points.`, leaderboardLabel:"Global Top 3 emoji podium", leaderboardTitle:"TOP 3 // GLOBAL HALL OF FAME", qualifiedTitle:"NEW HIGH SCORE", qualifiedText:(value,cores)=>`${cores} ${cores===1?"core":"cores"} converted into ${value} points and a TOP 3 finish.`, emojiLabel:"Randomize your podium character", emojiHint:"Keep rolling until you find your champion", randomEmoji:"🎲 Random Emoji", save:"Claim podium", skip:"Skip / retry", savedTitle:"PODIUM CLAIMED", savedText:emoji=>`${emoji} entered the Hall of Fame.`, clear:"Clear local", clearConfirm:"Clear the local TOP 3 and high score?", rankLabel:(rank,emoji,value,own)=>`Rank ${rank}, ${emoji}, ${value} points${own ? ", this device best" : ""}`, emptyRank:rank=>`Rank ${rank} empty`, connecting:"Connecting to leaderboard", synced:"Online leaderboard synced", offline:"Offline mode: showing local leaderboard", uploadSuccess:"Score uploaded", uploadInvalid:"Invalid score data; automatic retry disabled", uploadAuth:"Authentication failed; retrying after reconnect", uploadPermission:"Leaderboard permission denied; automatic retry disabled", uploadNetwork:"Network unavailable; score will retry later", uploadThrottled:"Submitting too quickly; score will retry later", uploadFailed:"Score upload failed; automatic retry disabled", ownBest:"YOUR BEST"
   }
 };
 
@@ -166,6 +166,22 @@ function renderLeaderboardStatus() {
   leaderboardStatus.dataset.state = lastLeaderboardStatus;
 }
 
+function handleUploadFailure(error) {
+  const detail = classifyLeaderboardError(error);
+  const statusByCategory = {
+    invalid:"uploadInvalid",
+    auth:"uploadAuth",
+    permission:"uploadPermission",
+    network:"uploadNetwork",
+    throttled:"uploadThrottled",
+    unknown:"uploadFailed"
+  };
+  lastLeaderboardStatus = statusByCategory[detail.category] || "uploadFailed";
+  if (!shouldRetryLeaderboardSubmission(error)) savePendingScore(null);
+  console.warn("[Cyber Snake leaderboard] submission failed", detail);
+  return detail;
+}
+
 async function initializeLeaderboard() {
   const result = await leaderboardService.init();
   if (!result.online) {
@@ -194,8 +210,8 @@ async function retryPendingScore() {
     scores = result.scores;
     lastLeaderboardStatus = "uploadSuccess";
     renderLeaderboard();
-  } catch {
-    lastLeaderboardStatus = "uploadFailed";
+  } catch (error) {
+    handleUploadFailure(error);
   }
   renderLeaderboardStatus();
 }
@@ -445,9 +461,9 @@ async function recordScore() {
     lastLeaderboardStatus = "uploadSuccess";
     renderLeaderboard();
     announce(text("uploadSuccess"));
-  } catch {
-    lastLeaderboardStatus = "uploadFailed";
-    announce(text("uploadFailed"));
+  } catch (error) {
+    handleUploadFailure(error);
+    announce(text(lastLeaderboardStatus));
   }
   renderLeaderboardStatus();
 }

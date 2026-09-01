@@ -6,25 +6,30 @@ the existing numbered archives remain unchanged as legacy history.
 
 ## [Unreleased]
 
+Planned prerelease: [`0.9.1-beta.1`](https://github.com/Tao-2026/cyber-snake/compare/v0.9.0-beta.1...HEAD). It has not been tagged or published.
+
 ### Added
 
-- Nothing yet.
+- Accept legacy `v001`–`v008` and strict stable/alpha/beta/rc Semantic Versions for leaderboard submissions.
+- Classify invalid data, authentication, permission, network, and throttling failures without logging player data.
 
 ### Changed
 
-- Nothing yet.
+- Preserve retryable pending scores while removing permanently invalid or permission-denied submissions from automatic retry.
+- Prepare the backward-compatible `0.9.1-beta.1` patch prerelease metadata.
 
 ### Fixed
 
-- Nothing yet.
+- Align client validation and Firestore Security Rules so Semantic Version scores can be uploaded.
+- Replace the generic upload failure copy with accurate bilingual retry guidance.
 
 ### Security
 
-- Nothing yet.
+- Keep all existing UID ownership, field range, server timestamp, personal-best, list-limit, and submission-throttle protections unchanged.
 
 ### Known Issues
 
-- Nothing yet.
+- Updated Firestore Rules must be published before Semantic Version scores can reach the production leaderboard.
 
 ## [0.9.0-beta.1] - 2026-08-24
 
