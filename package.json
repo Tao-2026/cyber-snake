@@ -1,11 +1,11 @@
 {
   "name": "cyber-snake",
-  "version": "0.9.0-beta.1",
+  "version": "0.9.1-beta.1",
   "private": true,
   "type": "module",
   "scripts": {
     "check:version": "node scripts/check-version.mjs",
     "check:release": "node scripts/check-release.mjs",
-    "test": "node tests/leaderboard-service.test.mjs && node tests/version-system.test.mjs && node scripts/check-version.mjs"
+    "test": "node tests/leaderboard-service.test.mjs && node tests/firestore-rules-version.test.mjs && node tests/version-system.test.mjs && node scripts/check-version.mjs"
   }
 }

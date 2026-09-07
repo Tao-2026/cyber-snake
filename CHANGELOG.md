@@ -6,25 +6,34 @@ the existing numbered archives remain unchanged as legacy history.
 
 ## [Unreleased]
 
+No unreleased changes yet.
+
+## [0.9.1-beta.1] - 2026-09-07
+
+This is a backward-compatible beta patch prerelease, not a stable release.
+
 ### Added
 
-- Nothing yet.
+- Accept legacy `v001`–`v008` and strict stable/alpha/beta/rc Semantic Versions for leaderboard submissions.
+- Classify invalid data, authentication, permission, network, and throttling failures without logging player data.
 
 ### Changed
 
-- Nothing yet.
+- Preserve retryable pending scores while removing permanently invalid or permission-denied submissions from automatic retry.
+- Prepare the backward-compatible `0.9.1-beta.1` patch prerelease metadata.
 
 ### Fixed
 
-- Nothing yet.
+- Align client validation and Firestore Security Rules so Semantic Version scores can be uploaded.
+- Replace the generic upload failure copy with accurate bilingual retry guidance.
 
 ### Security
 
-- Nothing yet.
+- Keep all existing UID ownership, field range, server timestamp, personal-best, list-limit, and submission-throttle protections unchanged.
 
 ### Known Issues
 
-- Nothing yet.
+- Cyber Snake is a client-authoritative browser game and cannot provide server-grade anti-cheat.
 
 ## [0.9.0-beta.1] - 2026-08-24
 
@@ -64,5 +73,6 @@ These tags predate Semantic Versioning. They are preserved exactly and will not 
 - [archive-v007-2026-08-17](https://github.com/Tao-2026/cyber-snake/compare/archive-v006-2026-08-17...archive-v007-2026-08-17) (`665060f`): mobile layout, pause placement, and Chinese copy refinements.
 - [archive-v008-2026-08-17](https://github.com/Tao-2026/cyber-snake/compare/archive-v007-2026-08-17...archive-v008-2026-08-17) (`7aaabc6`): Firebase Anonymous Authentication, Firestore shared global Top 3, localStorage offline fallback, security rules, personal bests, and duplicate-submission protection.
 
-[Unreleased]: https://github.com/Tao-2026/cyber-snake/compare/v0.9.0-beta.1...HEAD
+[Unreleased]: https://github.com/Tao-2026/cyber-snake/compare/v0.9.1-beta.1...HEAD
+[0.9.1-beta.1]: https://github.com/Tao-2026/cyber-snake/compare/v0.9.0-beta.1...v0.9.1-beta.1
 [0.9.0-beta.1]: https://github.com/Tao-2026/cyber-snake/compare/archive-v008-2026-08-17...v0.9.0-beta.1

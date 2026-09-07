@@ -7,7 +7,46 @@ const MAX_SCORE = 10000000;
 const MAX_CORES = 600;
 const MAX_DURATION_MS = 86400000;
 const MAX_LENGTH = 576;
-const VERSION_PATTERN = /^v\d{3}$/;
+const MAX_VERSION_LENGTH = 32;
+const VERSION_PATTERN = /^(?:v00[1-8]|(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:alpha|beta|rc)\.(?:0|[1-9]\d*))?)$/;
+
+const RETRYABLE_ERROR_CATEGORIES = new Set(["auth", "network", "throttled"]);
+
+export function isValidGameVersion(value) {
+  return typeof value === "string"
+    && value.length <= MAX_VERSION_LENGTH
+    && VERSION_PATTERN.test(value);
+}
+
+export function classifyLeaderboardError(error) {
+  const rawCode = typeof error?.code === "string" ? error.code : "";
+  const rawMessage = typeof error?.message === "string" ? error.message : "";
+  const code = rawCode || rawMessage || "unknown";
+  let category = "unknown";
+
+  if (code === "invalid-score-entry") category = "invalid";
+  else if (code === "submission-throttled") category = "throttled";
+  else if (["leaderboard-auth", "unauthenticated", "firestore/unauthenticated"].includes(code) || code.startsWith("auth/")) category = "auth";
+  else if (code === "permission-denied" || code === "firestore/permission-denied") category = "permission";
+  else if (["leaderboard-offline", "unavailable", "firestore/unavailable", "deadline-exceeded", "firestore/deadline-exceeded", "auth/network-request-failed"].includes(code)) category = "network";
+
+  return Object.freeze({
+    category,
+    diagnosticCode:code.slice(0, 80),
+    retryable:RETRYABLE_ERROR_CATEGORIES.has(category)
+  });
+}
+
+export function shouldRetryLeaderboardSubmission(error) {
+  return classifyLeaderboardError(error).retryable;
+}
+
+function submissionError(code, cause = null) {
+  const error = new Error(code, cause ? { cause } : undefined);
+  error.name = "LeaderboardSubmissionError";
+  error.code = code;
+  return error;
+}
 
 export function isValidLeaderboardEntry(entry) {
   return entry
@@ -16,7 +55,7 @@ export function isValidLeaderboardEntry(entry) {
     && Number.isInteger(entry.cores) && entry.cores > 0 && entry.cores <= MAX_CORES
     && Number.isInteger(entry.runDuration) && entry.runDuration >= 0 && entry.runDuration <= MAX_DURATION_MS
     && Number.isInteger(entry.maxLength) && entry.maxLength >= 4 && entry.maxLength <= MAX_LENGTH
-    && typeof entry.gameVersion === "string" && VERSION_PATTERN.test(entry.gameVersion);
+    && isValidGameVersion(entry.gameVersion);
 }
 
 export function compareLeaderboardEntries(a, b) {
@@ -37,7 +76,7 @@ export function createSubmissionGuard({ cooldown = SUBMIT_COOLDOWN_MS, now = () 
       const timestamp = now();
       const fingerprint = `${entry.score}:${entry.cores}:${entry.emoji}:${entry.runDuration}:${entry.maxLength}`;
       if (fingerprint === lastFingerprint || timestamp - lastSubmitAt < cooldown) {
-        throw new Error("submission-throttled");
+        throw submissionError("submission-throttled");
       }
       lastFingerprint = fingerprint;
       lastSubmitAt = timestamp;
@@ -120,8 +159,9 @@ export function createLeaderboardService({
   }
 
   async function submitScore(entry) {
-    if (!api || !db || !user) throw new Error("leaderboard-offline");
-    if (!isValidLeaderboardEntry(entry)) throw new TypeError("invalid-score-entry");
+    if (!api || !db) throw submissionError("leaderboard-offline");
+    if (!user) throw submissionError("leaderboard-auth");
+    if (!isValidLeaderboardEntry(entry)) throw submissionError("invalid-score-entry");
     submissionGuard.claim(entry);
 
     const reference = api.doc(db, COLLECTION, user.uid);
@@ -149,7 +189,9 @@ export function createLeaderboardService({
       return { updated, scores, playerId:user.uid };
     } catch (error) {
       submissionGuard.reset();
-      throw error;
+      const classified = classifyLeaderboardError(error);
+      if (classified.category !== "unknown") throw error;
+      throw submissionError(error?.code || "unknown", error);
     }
   }
 
