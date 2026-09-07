@@ -1,7 +1,7 @@
 export const APP_VERSION = "0.9.1-beta.1";
 export const RELEASE_CHANNEL = "beta";
 export const RELEASE_CODENAME = "GLOBAL GRID";
-export const RELEASE_DATE = null;
+export const RELEASE_DATE = "2026-09-07";
 export const RELEASE_COMMIT = null;
 
 export const RELEASE_URL =

@@ -6,7 +6,11 @@ the existing numbered archives remain unchanged as legacy history.
 
 ## [Unreleased]
 
-Planned prerelease: [`0.9.1-beta.1`](https://github.com/Tao-2026/cyber-snake/compare/v0.9.0-beta.1...HEAD). It has not been tagged or published.
+No unreleased changes yet.
+
+## [0.9.1-beta.1] - 2026-09-07
+
+This is a backward-compatible beta patch prerelease, not a stable release.
 
 ### Added
 
@@ -29,7 +33,7 @@ Planned prerelease: [`0.9.1-beta.1`](https://github.com/Tao-2026/cyber-snake/com
 
 ### Known Issues
 
-- Updated Firestore Rules must be published before Semantic Version scores can reach the production leaderboard.
+- Cyber Snake is a client-authoritative browser game and cannot provide server-grade anti-cheat.
 
 ## [0.9.0-beta.1] - 2026-08-24
 
@@ -69,5 +73,6 @@ These tags predate Semantic Versioning. They are preserved exactly and will not 
 - [archive-v007-2026-08-17](https://github.com/Tao-2026/cyber-snake/compare/archive-v006-2026-08-17...archive-v007-2026-08-17) (`665060f`): mobile layout, pause placement, and Chinese copy refinements.
 - [archive-v008-2026-08-17](https://github.com/Tao-2026/cyber-snake/compare/archive-v007-2026-08-17...archive-v008-2026-08-17) (`7aaabc6`): Firebase Anonymous Authentication, Firestore shared global Top 3, localStorage offline fallback, security rules, personal bests, and duplicate-submission protection.
 
-[Unreleased]: https://github.com/Tao-2026/cyber-snake/compare/v0.9.0-beta.1...HEAD
+[Unreleased]: https://github.com/Tao-2026/cyber-snake/compare/v0.9.1-beta.1...HEAD
+[0.9.1-beta.1]: https://github.com/Tao-2026/cyber-snake/compare/v0.9.0-beta.1...v0.9.1-beta.1
 [0.9.0-beta.1]: https://github.com/Tao-2026/cyber-snake/compare/archive-v008-2026-08-17...v0.9.0-beta.1
